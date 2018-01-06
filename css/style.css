@@ -1,0 +1,15 @@
+.btn-sq {
+  width: 100%!important;
+  padding-top: 25%!important; /* 1:1 Aspect Ratio */
+  padding-bottom: 25%!important; /* 1:1 Aspect Ratio */
+}
+
+.btn-sq-sm {
+  width: 100%!important;
+  padding-top: 10%!important; /* 1:1 Aspect Ratio */
+  padding-bottom: 10%!important; /* 1:1 Aspect Ratio */
+}
+
+.btn-sq-sm.selected {
+  border: 3px solid red;
+}
