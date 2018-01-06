@@ -67,7 +67,6 @@ CREATE TABLE `engineerAddress` (
 
 LOCK TABLES `engineerAddress` WRITE;
 /*!40000 ALTER TABLE `engineerAddress` DISABLE KEYS */;
-INSERT INTO `engineerAddress` VALUES (1,'234','4234','4234','324',234);
 /*!40000 ALTER TABLE `engineerAddress` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -92,7 +91,6 @@ CREATE TABLE `engineerPhones` (
 
 LOCK TABLES `engineerPhones` WRITE;
 /*!40000 ALTER TABLE `engineerPhones` DISABLE KEYS */;
-INSERT INTO `engineerPhones` VALUES (1,'21222',2),(2,'2222222',1);
 /*!40000 ALTER TABLE `engineerPhones` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -171,7 +169,6 @@ CREATE TABLE `project` (
 
 LOCK TABLES `project` WRITE;
 /*!40000 ALTER TABLE `project` DISABLE KEYS */;
-INSERT INTO `project` VALUES (1,'project 1','0000-00-00','desxript'),(2,'project 2','0000-00-00','description');
 /*!40000 ALTER TABLE `project` ENABLE KEYS */;
 UNLOCK TABLES;
 
