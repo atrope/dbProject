@@ -4,8 +4,9 @@ function getColumnsfromResult($result){
   $columns=[];
   for ($i = 0; $i < $result->columnCount(); $i++) {
     $col = $result->getColumnMeta($i);
-    $columns[] = (object) ["name"=>$col['name'],"type"=>$col['native_type'], "disabled"=>isPrimaryKey($col['flags'])];
+    $columns[] = (object) ["name"=>$col['name'],"type"=>$col['native_type'], "disabled"=>isPrimaryKey($col['flags']),"table"=>$col['table']];
   }
+
   return $columns;
 }
 function getDB(){
@@ -48,10 +49,21 @@ function isPrimaryKey($flags){
   foreach ($flags as $tmp) if ($tmp === "primary_key") return true;
   return false;
 }
+
+function createSelect($query,$objeto){
+  $html = '<select class="form-control" name="'.$objeto->name.'"><option value="0">Select '.$objeto->name.'</option>';
+  $db = getDB();
+  $result = $db->query($query);
+  foreach ($result as $value) $html.='<option value="'.$value->id.'">'.$value->name.'</option>';
+  $html.='</select>';
+  return $html;
+}
 function inputFromType($objeto){
   $html = '<label for="'.$objeto->name.'">'.$objeto->name.'</label>';
   if ($objeto->type === "DATE")
   $html .= '<input class="form-control" id="'.$objeto->name.'" name="'.$objeto->name.'" type="date" value="" required />';
+  else if ($objeto->table === "engineer" && $objeto->name === "specialization")
+    $html.= createSelect("SELECT * FROM softwareField",$objeto);
   else
     $html .= '<input class="form-control" id="'.$objeto->name.'" name="'.$objeto->name.'" type="text" value=""/>';
     return $objeto->disabled? str_replace("/>","disabled />",$html): $html;

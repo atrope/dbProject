@@ -16,7 +16,7 @@ if ($type === "new"){
   if (strlen($name)>4 &&  strlen($birthday)>4  &&  strlen($zeut)>4  &&  strlen($phone)>4 &&  strlen($street)>4 &&  strlen($street)>4 &&  strlen($zip)>4 &&  strlen($city)>4 &&  strlen($country)>4) {
     $output = ["status"=>300];
     $sql = 'INSERT INTO engineer( name,birthday,zeut,specialization ) VALUES(:name,:birthday,:zeut,:spec)';
-    $vals = [':name' => $name, ':birthday' => date('Y-m-d', strtotime(str_replace('-', '/', $birthday))) ,':zeut' => $zeut, ':spec' => null ];
+    $vals = [':name' => $name, ':birthday' => date('Y-m-d', strtotime(str_replace('-', '/', $birthday))) ,':zeut' => $zeut, ':spec' => $spec>0?$spec:null ];
     $engineerid = execSQL($sql,$vals);
     if($engineerid){
       $sql = 'INSERT INTO engineerPhones(phone,engineerId ) VALUES(:phone,:engineerId)';
