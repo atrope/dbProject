@@ -18,8 +18,6 @@
 --
 -- Table structure for table `engineer`
 --
-CREATE DATABASE IF NOT EXISTS softwareCompany;
-USE softwareCompany;
 
 DROP TABLE IF EXISTS `engineer`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -29,8 +27,10 @@ CREATE TABLE `engineer` (
   `name` varchar(255) NOT NULL,
   `birthday` date NOT NULL,
   `zeut` int(11) unsigned NOT NULL,
-  `specialization` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
+  `specialization` int(11) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sid` (`specialization`),
+  CONSTRAINT `sid` FOREIGN KEY (`specialization`) REFERENCES `softwareField` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -56,9 +56,11 @@ CREATE TABLE `engineerAddress` (
   `street` varchar(255) NOT NULL,
   `country` varchar(255) NOT NULL,
   `zip` varchar(255) NOT NULL,
-  `engineerId` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+  `engineerId` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `eidEA` (`engineerId`),
+  CONSTRAINT `eidEA` FOREIGN KEY (`engineerId`) REFERENCES `engineer` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -80,9 +82,11 @@ DROP TABLE IF EXISTS `engineerPhones`;
 CREATE TABLE `engineerPhones` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `phone` varchar(30) NOT NULL,
-  `engineerId` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+  `engineerId` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `eidEP` (`engineerId`),
+  CONSTRAINT `eidEP` FOREIGN KEY (`engineerId`) REFERENCES `engineer` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -104,9 +108,14 @@ DROP TABLE IF EXISTS `grades`;
 CREATE TABLE `grades` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
-  `projectId` int(11) NOT NULL,
-  `engineerId` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
+  `data` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `projectId` int(11) unsigned NOT NULL,
+  `engineerId` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pidG` (`projectId`),
+  KEY `eidG` (`engineerId`),
+  CONSTRAINT `eidG` FOREIGN KEY (`engineerId`) REFERENCES `engineer` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pidG` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -133,8 +142,10 @@ CREATE TABLE `milestone` (
   `enddate` date NOT NULL,
   `moneysum` decimal(15,2) NOT NULL,
   `done` tinyint(4) NOT NULL,
-  `projectId` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
+  `projectId` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pidM` (`projectId`),
+  CONSTRAINT `pidM` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -160,7 +171,7 @@ CREATE TABLE `project` (
   `startdate` date NOT NULL,
   `description` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -182,8 +193,10 @@ DROP TABLE IF EXISTS `projectSoftware`;
 CREATE TABLE `projectSoftware` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
-  `projectId` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
+  `projectId` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pidS` (`projectId`),
+  CONSTRAINT `pidS` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -229,9 +242,13 @@ DROP TABLE IF EXISTS `works`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `works` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `projectId` int(11) NOT NULL,
-  `engineerId` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
+  `projectId` int(11) unsigned NOT NULL,
+  `engineerId` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pidW` (`projectId`),
+  KEY `eidW` (`engineerId`),
+  CONSTRAINT `eidW` FOREIGN KEY (`engineerId`) REFERENCES `engineer` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pidW` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -253,4 +270,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-06 12:35:59
+-- Dump completed on 2018-01-08 19:47:31
