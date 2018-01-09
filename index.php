@@ -11,6 +11,9 @@
       <div class="col-4 mb-4">
         <a href="specialization/list.php" class="btn btn-sq btn-info"><i class="fa fa-graduation-cap fa-5x"></i><br/>Specializations</a>
       </div>
+      <div class="col-4 mb-4">
+        <a href="milestones/list.php" class="btn btn-sq btn-dark"><i class="fa fa-flag fa-5x"></i><br/>Milestones</a>
+      </div>
     </div>
 
   </div>

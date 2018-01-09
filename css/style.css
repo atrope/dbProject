@@ -13,3 +13,7 @@
 .btn-sq-sm.selected {
   border: 3px solid red;
 }
+
+.btn{
+  cursor: pointer;
+}

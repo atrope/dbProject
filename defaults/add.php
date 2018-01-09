@@ -5,7 +5,9 @@
         <?php include "../defaults/sideMenu.php"; ?>
     </div>
     <div class="col-11">
-      <?php echo createForm($query,"post.php"); ?>
+      <?php
+      echo createForm($query,"post.php",$id);
+      ?>
       <script type="text/javascript" src ="../js/post.js"></script>
     </div>
     </div>

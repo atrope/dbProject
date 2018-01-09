@@ -17,10 +17,11 @@ function getDB(){
   $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
   return $db;
 }
-function execSQL($query,$values){
+function execSQL($query,$values,$return=false){
   $db = getDB();
   $st = $db->prepare($query);
   if ($st->execute($values)){
+    if($return) return $st;
     if(stripos($query, "INSERT INTO") !== false) return $db->lastInsertId();
     return true;
   }
@@ -40,7 +41,16 @@ function createTable($query){
       if ($name === "id") $recordID=$val;
       $html.= "<td> $val </td>";
     }
-    $html.= '<td><button type="button" class="btn btn-info btn-sm btn-edit" data-id="'.$recordID.'">Edit</button> <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="'.$recordID.'">Delete</button></td></tr>';
+
+    $html.= '<td>';
+    if(stripos($query, "from project") !== false){
+      $html.= '<button type="button" class="btn btn-dark btn-sm btn-milestones mr-1" data-id="'.$recordID.'">Milestones</button>';
+        $html.= '<button type="button" class="btn btn-primary btn-sm btn-engineer mr-1" data-id="'.$recordID.'">Assign Engineer</button>';
+    }
+    else if(stripos($query, "from engineer") !== false){
+      $html.= '<button type="button" class="btn btn-primary btn-sm btn-project mr-1" data-id="'.$recordID.'">Assign Project</button>';
+    }
+    $html.= '<button type="button" class="btn btn-info btn-sm btn-edit mr-1" data-id="'.$recordID.'">Edit</button><button type="button" class="btn btn-danger btn-sm btn-delete mr-1" data-id="'.$recordID.'">Delete</button></td></tr>';
   }
   $html.= '</tbody></table>';
   return $html;
@@ -50,30 +60,41 @@ function isPrimaryKey($flags){
   return false;
 }
 
-function createSelect($query,$objeto){
+function createSelect($query,$objeto,$selected=0){
   $html = '<select class="form-control" name="'.$objeto->name.'"><option value="0">Select '.$objeto->name.'</option>';
   $db = getDB();
   $result = $db->query($query);
-  foreach ($result as $value) $html.='<option value="'.$value->id.'">'.$value->name.'</option>';
+  foreach ($result as $value){
+
+    if ($value->id == $selected) $s = " selected";
+    else $s="";
+    $html.='<option value="'.$value->id.'"'.$s.'>'.$value->name.'</option>';
+  }
   $html.='</select>';
   return $html;
 }
-function inputFromType($objeto){
+function inputFromType($objeto,$result){
   $html = '<label for="'.$objeto->name.'">'.$objeto->name.'</label>';
+  $value = is_null($result)?"":$result[$objeto->name];
   if ($objeto->type === "DATE")
-  $html .= '<input class="form-control" id="'.$objeto->name.'" name="'.$objeto->name.'" type="date" value="" required />';
-  else if ($objeto->table === "engineer" && $objeto->name === "specialization")
-    $html.= createSelect("SELECT * FROM softwareField",$objeto);
+  $html .= '<input class="form-control" id="'.$objeto->name.'" name="'.$objeto->name.'" type="date" value="'.$value.'" required />';
+  else if ($objeto->table === "e" && $objeto->name === "specialization")
+    $html.= createSelect("SELECT * FROM softwareField",$objeto,$value);
+  else if ($objeto->table === "milestone" && $objeto->name === "projectId")
+      $html.= createSelect("SELECT * FROM project",$objeto,$value);
   else
-    $html .= '<input class="form-control" id="'.$objeto->name.'" name="'.$objeto->name.'" type="text" value=""/>';
-    return $objeto->disabled? str_replace("/>","disabled />",$html): $html;
+    $html .= '<input class="form-control" id="'.$objeto->name.'" name="'.$objeto->name.'" type="text" value="'.$value.'"/>';
+    return $objeto->disabled? str_replace("/>","readonly />",$html): $html;
 }
-function createForm($query,$page){
+function createForm($query,$page,$edit=false){
   $db = getDB();
   $result = $db->query($query);
+  $val = $edit?"edit":"new";
   $columns = getColumnsfromResult($result);
+  if(!$edit) $result = null;
+  else $result = $result->fetch(PDO::FETCH_ASSOC);
   $html= '<form class="" action="'.$page.'" method="post"><div class="row">';
-  foreach ($columns as $col) $html.= '<div class="form-group col-6">'.inputFromType($col).'</div>';
-  $html.= '<div class="col-12 text-center"><button type="submit" class="btn btn-lg btn-primary submit">Save</button></div></div><input type="hidden" name="type" value="new"></form>';
+  foreach ($columns as $col) $html.= '<div class="form-group col-6">'.inputFromType($col,$result).'</div>';
+  $html.= '<div class="col-12 text-center"><button type="submit" class="btn btn-lg btn-primary submit">Save</button></div></div><input type="hidden" name="type" value="'.$val.'"></form>';
   return $html;
 }
