@@ -40,9 +40,57 @@ CREATE TABLE `engineer` (
 
 LOCK TABLES `engineer` WRITE;
 /*!40000 ALTER TABLE `engineer` DISABLE KEYS */;
-INSERT INTO `engineer` VALUES (1,'Gay Goede','1985-11-21',334863079,2),(2,'Rowena Searle','1951-12-11',317275303,5),(3,'Madelaine Klemensiewicz','1962-08-23',293204669,3),(4,'Rupert Whittles','1969-02-04',396703129,4),(5,'Ysabel Crasswell','1967-09-21',252405726,2),(6,'Kristy Siggs','1968-05-23',243458684,2),(7,'Carroll Bridgwater','1990-07-04',302481182,2),(8,'Lenna Morpeth','1996-01-06',265435780,2),(9,'Daven Poytheras','1982-05-14',230138029,4),(10,'Zabrina Genever','1985-10-25',230416357,1),(11,'Camey Chessum','1991-07-19',220408449,1),(12,'Minny Bruckenthal','1968-09-11',373724511,3),(13,'Samson Harmston','1992-12-25',321844146,1),(14,'Geoffry Aizlewood','1976-05-09',305256781,5),(15,'Christa Jahn','1993-02-07',313420675,2),(16,'Jilli Iceton','1957-11-15',358226982,3);
+INSERT INTO `engineer` VALUES (1,'Gay Goed','1985-11-21',334863079,2),(2,'Rowena Searle','1951-12-11',317275303,5),(3,'Madelaine Klemensiewicz','1962-08-23',293204669,3),(4,'Rupert Whittles','1969-02-04',396703129,4),(5,'Ysabel Crasswell','1967-09-21',252405726,2),(6,'Kristy Siggs','1968-05-23',243458684,2),(7,'Carroll Bridgwater','1990-07-04',302481182,2),(8,'Lenna Morpeth','1996-01-06',265435780,2),(9,'Daven Poytheras','1982-05-14',230138029,4),(10,'Zabrina Genever','1985-10-25',230416357,1),(11,'Camey Chessum','1991-07-19',220408449,1),(12,'Minny Bruckenthal','1968-09-11',373724511,3),(13,'Samson Harmston','1992-12-25',321844146,1),(14,'Geoffry Aizlewood','1976-05-09',305256781,5),(15,'Christa Jahn','1993-02-07',313420675,2),(16,'Jilli Iceton','1957-11-15',358226982,3);
 /*!40000 ALTER TABLE `engineer` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = latin1 */ ;
+/*!50003 SET character_set_results = latin1 */ ;
+/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER engineer_before_update BEFORE UPDATE ON engineer FOR EACH ROW
+BEGIN
+    INSERT INTO engineer_audit SET
+    action = 'update',
+    engineerId = OLD.id,
+    name = OLD.name,
+    birthday = OLD.birthday,
+    zeut = OLD.zeut,
+    specialization = OLD.specialization;
+  END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = latin1 */ ;
+/*!50003 SET character_set_results = latin1 */ ;
+/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER engineer_before_delete BEFORE DELETE ON engineer FOR EACH ROW
+  BEGIN
+  INSERT INTO engineer_audit SET
+  action = 'delete',
+  engineerId = OLD.id,
+  name = OLD.name,
+  birthday = OLD.birthday,
+  zeut = OLD.zeut,
+  specialization = OLD.specialization;
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `engineerAddress`
@@ -102,6 +150,36 @@ INSERT INTO `engineerPhones` VALUES (1,'57991884',1),(2,'55281340',2),(3,'583304
 UNLOCK TABLES;
 
 --
+-- Table structure for table `engineer_audit`
+--
+
+DROP TABLE IF EXISTS `engineer_audit`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `engineer_audit` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `engineerId` int(11) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `birthday` date NOT NULL,
+  `zeut` int(11) unsigned NOT NULL,
+  `specialization` int(11) unsigned DEFAULT NULL,
+  `action` varchar(50) DEFAULT NULL,
+  `changedate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `engineer_audit`
+--
+
+LOCK TABLES `engineer_audit` WRITE;
+/*!40000 ALTER TABLE `engineer_audit` DISABLE KEYS */;
+INSERT INTO `engineer_audit` VALUES (1,1,'Gay Goede','1985-11-21',334863079,2,'update','2018-01-10 16:08:03');
+/*!40000 ALTER TABLE `engineer_audit` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `grades`
 --
 
@@ -111,15 +189,15 @@ DROP TABLE IF EXISTS `grades`;
 CREATE TABLE `grades` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `value` int(11) NOT NULL,
-  `data` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `data` date NOT NULL,
   `projectId` int(11) unsigned NOT NULL,
   `engineerId` int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `pidG` (`projectId`),
+  UNIQUE KEY `UK_Tools` (`projectId`,`engineerId`,`data`),
   KEY `eidG` (`engineerId`),
   CONSTRAINT `eidG` FOREIGN KEY (`engineerId`) REFERENCES `engineer` (`id`) ON DELETE CASCADE,
   CONSTRAINT `pidG` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -128,7 +206,85 @@ CREATE TABLE `grades` (
 
 LOCK TABLES `grades` WRITE;
 /*!40000 ALTER TABLE `grades` DISABLE KEYS */;
+INSERT INTO `grades` VALUES (1,10,'2018-01-01',5,1),(2,6,'2018-01-01',7,1),(3,4,'2017-01-01',3,4),(5,4,'2017-02-01',3,4),(6,2,'2017-03-01',3,4),(7,6,'2017-04-01',3,4),(8,7,'2017-05-01',3,4),(9,8,'2017-06-01',3,4),(10,2,'2017-07-01',3,4),(11,1,'2017-08-01',3,4),(12,7,'2017-09-01',3,4),(13,9,'2017-10-01',3,4),(14,9,'2017-11-01',3,4),(15,9,'2017-12-01',3,4),(16,10,'2018-01-01',6,10),(17,6,'2018-01-01',7,14),(18,7,'2018-01-01',6,14);
 /*!40000 ALTER TABLE `grades` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = latin1 */ ;
+/*!50003 SET character_set_results = latin1 */ ;
+/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER grades_before_update BEFORE UPDATE ON grades FOR EACH ROW
+BEGIN
+    INSERT INTO grades_audit SET
+    action = 'update',
+    gradesId = OLD.id,
+    value = OLD.value,
+    data = OLD.data,
+    projectId = OLD.projectId,
+    engineerId = OLD.engineerId;
+  END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = latin1 */ ;
+/*!50003 SET character_set_results = latin1 */ ;
+/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER grades_before_delete BEFORE DELETE ON grades FOR EACH ROW
+  BEGIN
+      INSERT INTO grades_audit SET
+      action = 'delete',
+      gradesId = OLD.id,
+      value = OLD.value,
+      data = OLD.data,
+      projectId = OLD.projectId,
+      engineerId = OLD.engineerId;
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `grades_audit`
+--
+
+DROP TABLE IF EXISTS `grades_audit`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `grades_audit` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `gradesId` int(11) unsigned NOT NULL,
+  `value` int(11) NOT NULL,
+  `data` date NOT NULL,
+  `projectId` int(11) unsigned NOT NULL,
+  `engineerId` int(11) unsigned NOT NULL,
+  `action` varchar(50) DEFAULT NULL,
+  `changedate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `grades_audit`
+--
+
+LOCK TABLES `grades_audit` WRITE;
+/*!40000 ALTER TABLE `grades_audit` DISABLE KEYS */;
+/*!40000 ALTER TABLE `grades_audit` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -186,8 +342,112 @@ CREATE TABLE `project` (
 
 LOCK TABLES `project` WRITE;
 /*!40000 ALTER TABLE `project` DISABLE KEYS */;
-INSERT INTO `project` VALUES (1,'Nicolas LLC','2018-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',2),(2,'Wisozk-Quigley','2018-01-05','Siderosis',5),(3,'Goyette Inc','2018-01-06','Corrosion of second degree of right ankle and foot, sequela',1),(4,'Mitchell, Schulist and Koch','2018-01-10','3-part fx surgical neck of l humerus, subs for fx w malunion',1),(5,'Price, Renner and Weissnat','2018-01-17','Toxic effect of venom of venomous lizard, self-harm, init',1),(6,'Schinner-Halvorson','2018-01-04','Displacement of carotid arterial graft (bypass), init encntr',1),(7,'Huels LLC','2018-01-25','Displ suprcndl fx w intrcndl extn low end r femr, 7thJ',1),(8,'Sawayn-Kuhic','2018-01-29','Displ seg fx shaft of r tibia, init for opn fx type 3A/B/C',1),(9,'Kessler, Erdman and Gorczany','2018-01-04','Toxic effect of cadmium and its compounds, undet, sequela',1);
+INSERT INTO `project` VALUES (1,'Nicolas LLC','2017-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',6),(2,'Wisozk-Quigley','2018-01-05','Siderosis',5),(3,'Goyette Inc','2017-01-06','Corrosion of second degree of right ankle and foot, sequela',1),(4,'Mitchell, Schulist and Koch','2018-01-10','3-part fx surgical neck of l humerus, subs for fx w malunion',1),(5,'Price, Renner and Weissnat','2018-01-17','Toxic effect of venom of venomous lizard, self-harm, init',1),(6,'Schinner-Halvorson','2018-01-04','Displacement of carotid arterial graft (bypass), init encntr',1),(7,'Huels LLC','2018-01-25','Displ suprcndl fx w intrcndl extn low end r femr, 7thJ',1),(8,'Sawayn-Kuhic','2018-01-29','Displ seg fx shaft of r tibia, init for opn fx type 3A/B/C',1),(9,'Kessler, Erdman and Gorczany','2018-01-04','Toxic effect of cadmium and its compounds, undet, sequela',1);
 /*!40000 ALTER TABLE `project` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = latin1 */ ;
+/*!50003 SET character_set_results = latin1 */ ;
+/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER project_before_update BEFORE UPDATE ON project FOR EACH ROW
+    BEGIN
+        INSERT INTO project_audit SET
+        action = 'update',
+        projectId = OLD.id,
+        name = OLD.name,
+        startdate = OLD.startdate,
+        description = OLD.description,
+        stage = OLD.stage;
+      END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = latin1 */ ;
+/*!50003 SET character_set_results = latin1 */ ;
+/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER project_before_delete BEFORE DELETE ON project FOR EACH ROW
+      BEGIN
+          INSERT INTO project_audit SET
+          action = 'delete',
+          projectId = OLD.id,
+          name = OLD.name,
+          startdate = OLD.startdate,
+          description = OLD.description,
+          stage = OLD.stage;
+        END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `projectSoftware`
+--
+
+DROP TABLE IF EXISTS `projectSoftware`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `projectSoftware` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `projectId` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pidS` (`projectId`),
+  CONSTRAINT `pidS` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `projectSoftware`
+--
+
+LOCK TABLES `projectSoftware` WRITE;
+/*!40000 ALTER TABLE `projectSoftware` DISABLE KEYS */;
+/*!40000 ALTER TABLE `projectSoftware` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `project_audit`
+--
+
+DROP TABLE IF EXISTS `project_audit`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_audit` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `projectId` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `startdate` date NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `stage` tinyint(4) DEFAULT '1',
+  `action` varchar(50) DEFAULT NULL,
+  `changedate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `project_audit`
+--
+
+LOCK TABLES `project_audit` WRITE;
+/*!40000 ALTER TABLE `project_audit` DISABLE KEYS */;
+INSERT INTO `project_audit` VALUES (1,1,'Nicolas LLC','2018-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',1,'update','2018-01-10 16:04:20'),(2,1,'Nicolas LLC','2018-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',6,'update','2018-01-10 16:28:12'),(3,3,'Goyette Inc','2018-01-06','Corrosion of second degree of right ankle and foot, sequela',1,'update','2018-01-10 16:49:46');
+/*!40000 ALTER TABLE `project_audit` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -311,7 +571,7 @@ CREATE TABLE `works` (
   KEY `eidW` (`engineerId`),
   CONSTRAINT `eidW` FOREIGN KEY (`engineerId`) REFERENCES `engineer` (`id`) ON DELETE CASCADE,
   CONSTRAINT `pidW` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -320,7 +580,7 @@ CREATE TABLE `works` (
 
 LOCK TABLES `works` WRITE;
 /*!40000 ALTER TABLE `works` DISABLE KEYS */;
-INSERT INTO `works` VALUES (1,1,1),(10,1,14),(19,2,1),(20,2,6),(2,2,8),(21,2,11),(11,2,14),(3,3,3),(12,3,14),(4,4,3),(13,4,14),(5,5,11),(14,5,14),(6,6,10),(15,6,14),(16,7,14),(7,7,15),(17,8,14),(8,8,16),(9,9,2),(18,9,14);
+INSERT INTO `works` VALUES (1,1,1),(10,1,14),(19,2,1),(20,2,6),(2,2,8),(21,2,11),(11,2,14),(3,3,3),(12,3,14),(4,4,3),(13,4,14),(5,5,11),(14,5,14),(6,6,10),(22,6,14),(16,7,14),(7,7,15),(17,8,14),(8,8,16),(9,9,2),(18,9,14);
 /*!40000 ALTER TABLE `works` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -333,4 +593,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-10 13:22:59
+-- Dump completed on 2018-01-10 17:33:12
