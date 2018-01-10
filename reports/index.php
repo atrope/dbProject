@@ -3,7 +3,10 @@ include "../defaults/header.php";
 $menuItems = [
   (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
   (object) ["name"=> "Budget","href"=> "#",  "color"=>"success", "icon"=>"money","active"=>false],
-  (object) ["name"=> "Busiest","href"=> "#",  "color"=>"info", "icon"=>"briefcase","active"=>false]];
+  (object) ["name"=> "Busiest","href"=> "#",  "color"=>"info", "icon"=>"briefcase","active"=>false],
+  (object) ["name"=> "Proj/Eng","href"=> "#",  "color"=>"dark", "icon"=>"user","active"=>false],
+  (object) ["name"=> "Tools/Stage","href"=> "#",  "color"=>"warning", "icon"=>"wrench","active"=>false]
+];
   ?>
   <div class="wrapper">
     <div class="container-fluid">

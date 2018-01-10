@@ -260,6 +260,30 @@ $(document).ready(function() {
           });
         });
 
+        $(".table").on("click", ".btn-stage", function(event) {
+          var id = $(this).data("id");
+          $.post("../defaults/getJSON.php", {"type":"getStages","project":id,"available":1}, function(data) {
+              try {
+                  parsing = $.parseJSON(data);
+                  console.log(parsing);
+                  if (parsing.length) {
+                      swal({title: 'Choose the new stage',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Stage',showCancelButton: true,inputValidator: function(value) {
+                        return new Promise(function(resolve, reject) {
+                          if (!isNaN(value)) resolve();
+                        })
+                      }
+                      }).then(function(result) {
+                        if(result.hasOwnProperty('value'))
+                          getJSON({"type": "assignStageProject","stage": result.value,"project": id});
+                          location.reload();
+                      });
+                  } else swal('Error!', 'No stages available.', 'error');
+              } catch (e) {
+                  swal('Error!', 'Error Ocurred in the backend.', 'error');
+              }
+          });
+        });
+
 
 
 

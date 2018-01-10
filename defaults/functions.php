@@ -47,10 +47,11 @@ function createTable($query){
     $html.= '<td>';
     if(stripos($query, "from project") !== false){
       $html.= '<button type="button" class="btn btn-dark btn-sm btn-milestones mr-1" data-id="'.$recordID.'">Milestones</button>';
-        $html.= '<button type="button" class="btn btn-primary btn-sm btn-engineer mr-1" data-id="'.$recordID.'">Assign Engineer</button>';
-        $html.= '<button type="button" class="btn btn-success btn-sm btn-listengineers mr-1" data-id="'.$recordID.'">Assigned Engineers</button>';
-        $html.= '<button type="button" class="btn btn-default btn-sm btn-tool mr-1" data-id="'.$recordID.'">Assign Tool</button>';
-        $html.= '<button type="button" class="btn btn-secondary btn-sm btn-listtools mr-1" data-id="'.$recordID.'">Assigned Tools</button>';
+        $html.= '<button type="button" class="btn btn-primary btn-sm btn-engineer mr-1" data-id="'.$recordID.'">+ Engineer</button>';
+        $html.= '<button type="button" class="btn btn-success btn-sm btn-listengineers mr-1" data-id="'.$recordID.'">List Engineers</button>';
+        $html.= '<button type="button" class="btn btn-default btn-sm btn-tool mr-1" data-id="'.$recordID.'">+ Tool</button>';
+        $html.= '<button type="button" class="btn btn-secondary btn-sm btn-listtools mr-1" data-id="'.$recordID.'">List Tools</button>';
+        $html.= '<button type="button" class="btn btn-warning btn-sm btn-stage mr-1" data-id="'.$recordID.'">Change Stage</button>';
     }
     if(stripos($query, "from tool") !== false){
       $html.= '<button type="button" class="btn btn-primary btn-sm btn-tproject mr-1" data-id="'.$recordID.'">Assign Project</button>';
@@ -94,6 +95,8 @@ function inputFromType($objeto,$result){
   $html .= '<input class="form-control" id="'.$objeto->name.'" name="'.$objeto->name.'" type="date" value="'.$value.'" required />';
   else if ($objeto->table === "e" && $objeto->name === "specialization")
     $html.= createSelect("SELECT * FROM softwareField",$objeto,$value);
+  else if ($objeto->table === "project" && $objeto->name === "stage")
+      $html.= createSelect("SELECT * FROM stages",$objeto,$value);
   else if ($objeto->table === "milestone" && $objeto->name === "projectId")
       $html.= createSelect("SELECT * FROM project",$objeto,$value);
   else

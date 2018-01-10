@@ -15,6 +15,65 @@ $(document).ready(function() {
       });
       });
 
+      $(".wrapper").on("click", ".btn-dark", function(e) {
+        e.preventDefault();
+        $.post("../defaults/getJSON.php",{"type":"getAvailableProjects","engineer":0,"available":1}, function(data) {
+            try {
+                parsing = $.parseJSON(data);
+                if (parsing.length) {
+                    swal({title: 'Choose the Project to list',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Project',showCancelButton: true,inputValidator: function(value) {
+                      return new Promise(function(resolve, reject) {
+                        if (!isNaN(value)) resolve();
+                      })
+                    }
+                    }).then(function(result) {
+                        if(result.hasOwnProperty('value'))
+                        $.post("../defaults/getJSON.php", {"type":"getAvailableEngineers","project":result.value,"group":1}, function(data) {
+                            parsed = $.parseJSON(data);
+                            $('.results').html("<h1>Engineers that works in the Project grouped by Spec</h1>" + tableFromJSON(parsed));
+                        });
+                    });
+                } else swal('Error!', 'No Projects Exists.', 'error');
+            } catch (e) {
+                swal('Error!', 'Error Ocurred in the backend.', 'error');
+            }
+        });
+
+
+
+
+
+        });
+        $(".wrapper").on("click", ".btn-warning", function(e) {
+          e.preventDefault();
+          $.post("../defaults/getJSON.php",{"type":"getStages","project":0,"available":1}, function(data) {
+              try {
+                  parsing = $.parseJSON(data);
+                  if (parsing.length) {
+                      swal({title: 'Choose the stage to list',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Project',showCancelButton: true,inputValidator: function(value) {
+                        return new Promise(function(resolve, reject) {
+                          if (!isNaN(value)) resolve();
+                        })
+                      }
+                      }).then(function(result) {
+                          if(result.hasOwnProperty('value'))
+                          $.post("../defaults/getJSON.php", {"type":"stageTools","stage":result.value}, function(data) {
+                              parsed = $.parseJSON(data);
+                              $('.results').html("<h1>Tools used by project by stage</h1>" + tableFromJSON(parsed));
+                          });
+                      });
+                  } else swal('Error!', 'No Projects Exists.', 'error');
+              } catch (e) {
+                  swal('Error!', 'Error Ocurred in the backend.', 'error');
+              }
+          });
+
+
+
+
+
+          });
+
 
 
 function tableFromJSON(parsed){
@@ -36,6 +95,13 @@ function tableFromJSON(parsed){
   return tblSomething;
 }
   });
+  function dictFromParse(parsing){
+    var dict = {};
+    $.each(parsing, function(index, item) {
+      dict[item.id] = item.name;
+    });
+    return dict;
+  }
 
 function getUSD(price){
   var formatter = new Intl.NumberFormat('en-US', {
