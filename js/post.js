@@ -9,7 +9,8 @@ $(document).ready(function() {
                     parsing = $.parseJSON(data);
                     if (parsing.status == 200)
                         swal({title: 'Success! :)',type: 'success'})
-                        .then((result) => { if (result.value) location.reload();});
+                        .then((result) => { if (result.value)       window.location.href = window.location.href.split('?')[0].replace("add.php","list.php");
+ });
                     else swal("Oops...", "There were errors with your data :)", "error");
                     formObj.find(".loading").replaceWith('<button type="submit" class="btn btn-lg btn-primary submit">Save</button>');
                 } catch (e) {

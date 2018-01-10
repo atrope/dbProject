@@ -15,6 +15,8 @@ function getDB(){
   $dsn      = 'mysql:host=localhost;dbname=softwareCompany';
   $db       = new PDO($dsn, $user, $password);
   $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
+  $db->exec("SET CHARACTER SET utf8");
+
   return $db;
 }
 function execSQL($query,$values,$return=false){
@@ -46,9 +48,21 @@ function createTable($query){
     if(stripos($query, "from project") !== false){
       $html.= '<button type="button" class="btn btn-dark btn-sm btn-milestones mr-1" data-id="'.$recordID.'">Milestones</button>';
         $html.= '<button type="button" class="btn btn-primary btn-sm btn-engineer mr-1" data-id="'.$recordID.'">Assign Engineer</button>';
+        $html.= '<button type="button" class="btn btn-success btn-sm btn-listengineers mr-1" data-id="'.$recordID.'">Assigned Engineers</button>';
+        $html.= '<button type="button" class="btn btn-default btn-sm btn-tool mr-1" data-id="'.$recordID.'">Assign Tool</button>';
+        $html.= '<button type="button" class="btn btn-secondary btn-sm btn-listtools mr-1" data-id="'.$recordID.'">Assigned Tools</button>';
+    }
+    if(stripos($query, "from tool") !== false){
+      $html.= '<button type="button" class="btn btn-primary btn-sm btn-tproject mr-1" data-id="'.$recordID.'">Assign Project</button>';
+      $html.= '<button type="button" class="btn btn-success btn-sm btn-listtprojects mr-1" data-id="'.$recordID.'">Assigned Projects</button>';
+
     }
     else if(stripos($query, "from engineer") !== false){
       $html.= '<button type="button" class="btn btn-primary btn-sm btn-project mr-1" data-id="'.$recordID.'">Assign Project</button>';
+      $html.= '<button type="button" class="btn btn-success btn-sm btn-listprojects mr-1" data-id="'.$recordID.'">Assigned Projects</button>';
+    }
+    else if(stripos($query, "from milestone") !== false){
+      $html.= '<button type="button" class="btn btn-dark btn-sm btn-mile-done mr-1" data-id="'.$recordID.'">Toggle Milestone</button>';
     }
     $html.= '<button type="button" class="btn btn-info btn-sm btn-edit mr-1" data-id="'.$recordID.'">Edit</button><button type="button" class="btn btn-danger btn-sm btn-delete mr-1" data-id="'.$recordID.'">Delete</button></td></tr>';
   }
@@ -88,6 +102,7 @@ function inputFromType($objeto,$result){
 }
 function createForm($query,$page,$edit=false){
   $db = getDB();
+
   $result = $db->query($query);
   $val = $edit?"edit":"new";
   $columns = getColumnsfromResult($result);

@@ -1,0 +1,23 @@
+<?php
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "Budget","href"=> "#",  "color"=>"success", "icon"=>"money","active"=>false],
+  (object) ["name"=> "Busiest","href"=> "#",  "color"=>"info", "icon"=>"briefcase","active"=>false]];
+  ?>
+  <div class="wrapper">
+    <div class="container-fluid">
+      <div class="row mt-4">
+        <div class="col-1">
+          <?php include "../defaults/sideMenu.php"; ?>
+      </div>
+      <div class="col-11 results">
+      </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript" src ="../js/reports.js"></script>
+
+<?php
+ include "../defaults/footer.php";
+?>

@@ -184,32 +184,6 @@ LOCK TABLES `project` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `projectSoftware`
---
-
-DROP TABLE IF EXISTS `projectSoftware`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `projectSoftware` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
-  `projectId` int(11) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `pidS` (`projectId`),
-  CONSTRAINT `pidS` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `projectSoftware`
---
-
-LOCK TABLES `projectSoftware` WRITE;
-/*!40000 ALTER TABLE `projectSoftware` DISABLE KEYS */;
-/*!40000 ALTER TABLE `projectSoftware` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `softwareField`
 --
 

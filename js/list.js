@@ -31,34 +31,71 @@ $(document).ready(function() {
     });
     $(".table").on("click",".btn-edit", function(event) {
       var id = $(this).data("id");
-      window.location.href = window.location.href.replace("list.php","add.php?id="+id);
+      window.location.href = window.location.href.split('?')[0].replace("list.php","add.php?id="+id);
     });
     $(".table").on("click",".btn-milestones", function(event) {
       var id = $(this).data("id");
-      window.location.href = window.location.href.replace("projects/list.php","milestones/list.php?pid="+id);
+      window.location.href = window.location.href.split('?')[0].replace("projects/list.php","milestones/list.php?pid="+id);
     });
+    $(".table").on("click", ".btn-engineer", function(event) {
+        var id = $(this).data("id");
+        $.post("../defaults/getJSON.php",{"type":"getAvailableEngineers","project":id,"available":1}, function(data) {
+            try {
+                parsing = $.parseJSON(data);
+                if (parsing.length) {
+                    swal({title: 'Choose the Engineer to Assign',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Engineer',showCancelButton: true,inputValidator: function(value) {
+                      return new Promise(function(resolve, reject) {
+                        if (!isNaN(value)) resolve();
+                      })
+                    }
+                    }).then(function(result) {
+                        if(result.hasOwnProperty('value'))
+                        getJSON({"type":"assignEngineerProject","project":id,"engineer":result.value});
 
-    $(".table").on("click",".btn-engineer", function(event) {
+                    });
+                } else swal('Error!', 'No Engineers Assigned.', 'error');
+            } catch (e) {
+                swal('Error!', 'Error Ocurred in the backend.', 'error');
+            }
+        });
+      });
+
+    $(".table").on("click", ".btn-project", function(event) {
+        var id = $(this).data("id");
+        $.post("../defaults/getJSON.php",{"type":"getAvailableProjects","engineer":id,"available":1}, function(data) {
+            try {
+                parsing = $.parseJSON(data);
+                if (parsing.length) {
+                    swal({title: 'Choose the Project to Assign',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Project',showCancelButton: true,inputValidator: function(value) {
+                      return new Promise(function(resolve, reject) {
+                        if (!isNaN(value)) resolve();
+                      })
+                    }
+                    }).then(function(result) {
+                        if(result.hasOwnProperty('value'))
+                        getJSON({"type":"assignEngineerProject","project":result.value,"engineer":id});
+
+                    });
+                } else swal('Error!', 'No Engineers Assigned.', 'error');
+            } catch (e) {
+                swal('Error!', 'Error Ocurred in the backend.', 'error');
+            }
+        });
+      });
+
+
+
+
+    $(".table").on("click",".btn-mile-done", function(event) {
       var id = $(this).data("id");
-      $.post("../defaults/getJSON.php",{"type":"getAvailableEngineers","project":id},function(data){
+      $.post("../defaults/getJSON.php",{"type":"toggleMilestone","mid":id},function(data){
         try {
           parsing = $.parseJSON(data);
-          if (parsing.length){
-            var s = $('<select/>').addClass("form-control");
-            $.each(parsing, function(index, item) {
-              s.append($('<option/>').html(item.name).val(item.id));
-            });
-            swal({title: 'Choose the Engineer to Assign',type: 'info',html: s,showCancelButton: true,confirmButtonText:'<i class="fa fa-thumbs-up"></i>',cancelButtonText:'<i class="fa fa-ban"></i>'}).then((result) => {
-            if (result.value) {
-              var eid = s.val();
-              $.post("../defaults/getJSON.php",{"type":"assignEngineerProject","project":id,"engineer":eid},function(data){
-                parsed = $.parseJSON(data);
-                  if (parsed.status==200) swal('Assigned!','Engineer Assigned to Project','success');
-                  else swal('Error!','Something is not right.','error');
-              });
-            }
-          });
-        } else swal('Error!','No Engineers Available.','error');
+          if (parsing.status == 200){
+            swal('OK!','Milestone Toggled.','success');
+            location.reload();
+          }
+          else  swal('Error!','Error Ocurred in the backend.','error');
         }
         catch (e){
           swal('Error!','Error Ocurred in the backend.','error');
@@ -66,31 +103,182 @@ $(document).ready(function() {
         });
     });
 
-    $(".table").on("click",".btn-project", function(event) {
-      var id = $(this).data("id");
-      $.post("../defaults/getJSON.php",{"type":"getAvailableProjects","engineer":id},function(data){
-        try {
-          parsing = $.parseJSON(data);
-          if (parsing.length){
-            var s = $('<select/>').addClass("form-control");
-            $.each(parsing, function(index, item) {
-              s.append($('<option/>').html(item.name).val(item.id));
+
+
+
+
+
+        $(".table").on("click", ".btn-listprojects", function(event) {
+            var id = $(this).data("id");
+            $.post("../defaults/getJSON.php",{"type":"getAvailableProjects","engineer":id,"available":0}, function(data) {
+                try {
+                    parsing = $.parseJSON(data);
+                    if (parsing.length) {
+                        swal({title: 'Choose the Project to Unassign',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Project',showCancelButton: true,inputValidator: function(value) {
+                          return new Promise(function(resolve, reject) {
+                            if (!isNaN(value)) resolve();
+                          })
+                        }
+                        }).then(function(result) {
+                            if(result.hasOwnProperty('value'))
+                            getJSON({"type":"assignEngineerProject","project":result.value,"engineer":id,"remove":1});
+
+                        });
+                    } else swal('Error!', 'No Projects Assigned.', 'error');
+                } catch (e) {
+                    swal('Error!', 'Error Ocurred in the backend.', 'error');
+                }
             });
-            swal({title: 'Choose the Project to Assign',type: 'info',html: s,showCancelButton: true,confirmButtonText:'<i class="fa fa-thumbs-up"></i>',cancelButtonText:'<i class="fa fa-ban"></i>'}).then((result) => {
-            if (result.value) {
-              var pid = s.val();
-              $.post("../defaults/getJSON.php",{"type":"assignEngineerProject","project":pid,"engineer":id},function(data){
-                parsed = $.parseJSON(data);
-                  if (parsed.status==200) swal('Assigned!','Engineer Assigned to Project','success');
-                  else swal('Error!','Something is not right.','error');
-              });
-            }
           });
-        } else swal('Error!','No Projects Available.','error');
-        }
-        catch (e){
-          swal('Error!','Error Ocurred in the backend.','error');
-        }
+
+
+
+
+
+
+                  $(".table").on("click", ".btn-listengineers", function(event) {
+                      var id = $(this).data("id");
+                      $.post("../defaults/getJSON.php",{"type":"getAvailableEngineers","project":id,"available":0}, function(data) {
+                          try {
+                              parsing = $.parseJSON(data);
+                              if (parsing.length) {
+                                  swal({title: 'Choose the Engineer to Unassign',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Engineer',showCancelButton: true,inputValidator: function(value) {
+                                    return new Promise(function(resolve, reject) {
+                                      if (!isNaN(value)) resolve();
+                                    })
+                                  }
+                                  }).then(function(result) {
+                                      if(result.hasOwnProperty('value'))
+                                      getJSON({"type":"assignEngineerProject","engineer":result.value,"project":id,"remove":1});
+
+                                  });
+                              } else swal('Error!', 'No Engineers Assigned.', 'error');
+                          } catch (e) {
+                              swal('Error!', 'Error Ocurred in the backend.', 'error');
+                          }
+                      });
+                    });
+
+
+
+
+
+
+                $(".table").on("click", ".btn-tool", function(event) {
+                  var id = $(this).data("id");
+                  $.post("../defaults/getJSON.php", {"type":"getAvailableTools","project":id,"available":1}, function(data) {
+                      try {
+                          parsing = $.parseJSON(data);
+                          if (parsing.length) {
+                              swal({title: 'Choose the Tool to Assign',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Tool',showCancelButton: true,inputValidator: function(value) {
+                                return new Promise(function(resolve, reject) {
+                                  if (!isNaN(value)) resolve();
+                                })
+                              }
+                              }).then(function(result) {
+                                  if(result.hasOwnProperty('value'))
+                                  getJSON({"type":"assignToolProject","project":id,"tool":result.value,"remove":0});
+
+                              });
+                          } else swal('Error!', 'No Tools Available.', 'error');
+                      } catch (e) {
+                          swal('Error!', 'Error Ocurred in the backend.', 'error');
+                      }
+                  });
+                });
+
+
+            $(".table").on("click", ".btn-listtools", function(event) {
+              var id = $(this).data("id");
+              $.post("../defaults/getJSON.php", {"type":"getAvailableTools","project":id,"available":0}, function(data) {
+                  try {
+                      parsing = $.parseJSON(data);
+                      if (parsing.length) {
+                          swal({title: 'Choose the Tool to Unassign',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Tool',showCancelButton: true,inputValidator: function(value) {
+                            return new Promise(function(resolve, reject) {
+                              if (!isNaN(value)) resolve();
+                            })
+                          }
+                          }).then(function(result) {
+                              if(result.hasOwnProperty('value'))
+                              getJSON({"type":"assignToolProject","tool":result.value,"project":id,"remove":1});
+
+                          });
+                      } else swal('Error!', 'No Tools Assigned.', 'error');
+                  } catch (e) {
+                      swal('Error!', 'Error Ocurred in the backend.', 'error');
+                  }
+              });
+            });
+
+
+
+
+        $(".table").on("click", ".btn-tproject", function(event) {
+          var id = $(this).data("id");
+          $.post("../defaults/getJSON.php", {"type":"getAvailableToolsProjects","tool":id,"available":1}, function(data) {
+              try {
+                  parsing = $.parseJSON(data);
+                  if (parsing.length) {
+                      swal({title: 'Choose the Project to Assign',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Project',showCancelButton: true,inputValidator: function(value) {
+                        return new Promise(function(resolve, reject) {
+                          if (!isNaN(value)) resolve();
+                        })
+                      }
+                      }).then(function(result) {
+                          if(result.hasOwnProperty('value'))
+                          getJSON({"type": "assignToolProject","project": result.value,"tool": id,"remove": 0});
+
+                      });
+                  } else swal('Error!', 'No Projects Assigned.', 'error');
+              } catch (e) {
+                  swal('Error!', 'Error Ocurred in the backend.', 'error');
+              }
+          });
         });
-    });
+
+        $(".table").on("click", ".btn-listtprojects", function(event) {
+          var id = $(this).data("id");
+          $.post("../defaults/getJSON.php", {"type":"getAvailableToolsProjects","tool":id,"available":0}, function(data) {
+              try {
+                  parsing = $.parseJSON(data);
+                  console.log(parsing);
+                  if (parsing.length) {
+                      swal({title: 'Choose the Project to Unassign',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Project',showCancelButton: true,inputValidator: function(value) {
+                        return new Promise(function(resolve, reject) {
+                          if (!isNaN(value)) resolve();
+                        })
+                      }
+                      }).then(function(result) {
+                        if(result.hasOwnProperty('value'))
+                          getJSON({"type": "assignToolProject","project": result.value,"tool": id,"remove": 1});
+                      });
+                  } else swal('Error!', 'No Projects Assigned.', 'error');
+              } catch (e) {
+                  swal('Error!', 'Error Ocurred in the backend.', 'error');
+              }
+          });
+        });
+
+
+
+
+
   });
+
+
+
+  function getJSON(options){
+    $.post("../defaults/getJSON.php", options, function(data) {
+        parsed = $.parseJSON(data);
+        if (parsed.status == 200) swal('Success!', '','success');
+        else swal('Error!', 'Something is not right.', 'error');
+    });
+  }
+  function dictFromParse(parsing){
+    var dict = {};
+    $.each(parsing, function(index, item) {
+      dict[item.id] = item.name;
+    });
+    return dict;
+  }
