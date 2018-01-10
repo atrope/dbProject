@@ -14,6 +14,43 @@ $(document).ready(function() {
           $('.results').html("<h1>Engineers that works in all active projects</h1>" + tableFromJSON(parsed));
       });
       });
+      $(".wrapper").on("click", ".btn-primary", function(e) {
+        e.preventDefault();
+
+          swal({
+  title: 'Select Option',
+  input: 'select',
+  inputOptions: {
+    '0': '3 Worts',
+    '1': '3 Best'
+  },
+  inputClass: "form-control",
+  inputPlaceholder: 'Select Type',
+  showCancelButton: true,inputValidator: function(value) {
+    return new Promise(function(resolve, reject) {
+      if (!isNaN(value)) resolve();
+    })
+  }
+  }).then(function(result) {
+      if(result.hasOwnProperty('value'))
+      $.post("../defaults/getJSON.php", {"type":"getAVGgrades","fun":result.value}, function(data) {
+          parsed = $.parseJSON(data);
+          if (result.value)
+          $('.results').html("<h1>Projects most fun</h1>" + tableFromJSON(parsed,false));
+          else
+          $('.results').html("<h1>Projects least fun</h1>" + tableFromJSON(parsed,false));
+      });
+  });
+
+
+
+
+        });
+
+
+
+
+
 
       $(".wrapper").on("click", ".btn-dark", function(e) {
         e.preventDefault();
@@ -76,7 +113,7 @@ $(document).ready(function() {
 
 
 
-function tableFromJSON(parsed){
+function tableFromJSON(parsed,usd=true){
   var tblSomething = '<table class="table"><thead> <tr>';
   var keys = Object.keys(parsed[0]);
   $.each(keys, function(idx, obj){
@@ -86,7 +123,7 @@ function tableFromJSON(parsed){
   $.each(parsed, function(idx, obj){
     tblSomething += '<tr>';
     $.each(obj, function(key, value){
-      if( /[0-9][.]+[0-9]/.test(value)) tblSomething += '<td>' + getUSD(value) + '</td>';
+      if( /[0-9][.]+[0-9]/.test(value) && usd) tblSomething += '<td>' + getUSD(value) + '</td>';
       else tblSomething += '<td>' + value + '</td>';
     });
     tblSomething += '</tr>';

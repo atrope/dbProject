@@ -59,8 +59,9 @@ function createTable($query){
 
     }
     else if(stripos($query, "from engineer") !== false){
-      $html.= '<button type="button" class="btn btn-primary btn-sm btn-project mr-1" data-id="'.$recordID.'">Assign Project</button>';
-      $html.= '<button type="button" class="btn btn-success btn-sm btn-listprojects mr-1" data-id="'.$recordID.'">Assigned Projects</button>';
+      $html.= '<button type="button" class="btn btn-dark btn-sm btn-grade mr-1" data-id="'.$recordID.'">Grade</button>';
+      $html.= '<button type="button" class="btn btn-primary btn-sm btn-project mr-1" data-id="'.$recordID.'">+Project</button>';
+      $html.= '<button type="button" class="btn btn-success btn-sm btn-listprojects mr-1" data-id="'.$recordID.'">Projects</button>';
     }
     else if(stripos($query, "from milestone") !== false){
       $html.= '<button type="button" class="btn btn-dark btn-sm btn-mile-done mr-1" data-id="'.$recordID.'">Toggle Milestone</button>';

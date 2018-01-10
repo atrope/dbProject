@@ -131,8 +131,60 @@ else if ($type == "stageTools"){
     foreach ($result as $t) $output[] = $t;
 }
 
+else if ($type == "getMissingGrades"){
+    $pid = isset($_REQUEST["project"])?$_REQUEST["project"]:0;
+    $eid = isset($_REQUEST["engineer"])?$_REQUEST["engineer"]:0;
+    $output = [];
+    if($pid && $eid){
+    $sql = "select startdate from project where id = :pid";
+    $val = [":pid" => $pid];
+    $result = execSQL($sql,$val,true);
+    if($result){
+      $object = $result->fetch();
+      $start    = (new DateTime($object->startdate))->modify('first day of this month');
+      $end      = (new DateTime('today'))->modify('first day of next month');
+      $interval = DateInterval::createFromDateString('1 month');
+      $period   = new DatePeriod($start, $interval, $end);
+      $months = [];
+      foreach ($period as $dt) $months[] = $dt->format("Y-m-d");
+      $sql = "select data from grades where engineerId = :eid and projectId = :pid";
 
+      $val = [":pid" => $pid,":eid" => $eid];
+      $result = execSQL($sql,$val,true);
+      if($result){
+        $grades = [];
+        $output = [];
+        foreach ($result as $date) $grades[] = (new DateTime($date->data))->modify('first day of this month')->format("Y-m-d");
+        foreach ($months as $t) if (!in_array($t,$grades)) $output [] = ["name"=>(new DateTime($t))->format('F/Y'),"id"=>$t];
+      }
 
+    }
+  }
+}
+else if ($type == "assingGrade"){
+  $pid = isset($_REQUEST["project"])?$_REQUEST["project"]:0;
+  $eid = isset($_REQUEST["engineer"])?$_REQUEST["engineer"]:0;
+  $date = isset($_REQUEST["date"])?$_REQUEST["date"]:0;
+  $grade = isset($_REQUEST["grade"])?$_REQUEST["grade"]:0;
+
+  if ($pid && $eid){
+    $sql = "INSERT INTO grades(value,data,projectId,engineerId) values(:grade,:dat,:pid,:eid);";
+    $val = [":pid" => $pid,":eid" => $eid,":dat"=>$date,":grade"=>$grade];
+    if ($result = execSQL($sql,$val)) $output = ["status"=>200];
+    else  $output = ["status"=>300];
+  }
+}
+else if ($type == "getAVGgrades"){
+  $fun = isset($_REQUEST["fun"])?$_REQUEST["fun"]:0;
+  if ($fun)
+    $sql = "select p.id,p.name,AVG(value) as average from project p inner join grades g on p.id = g.projectId group by id order by 3 DESC LIMIT 3;";
+  else
+    $sql = "select p.id,p.name,AVG(value) as average from project p inner join grades g on p.id = g.projectId group by id order by 3 ASC LIMIT 3;";
+    $result = execSQL($sql,[],true);
+    $output = [];
+    if ($result)
+    foreach ($result as $t) $output[] = $t;
+  }
 
 
 

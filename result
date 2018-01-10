@@ -1,0 +1,658 @@
+<div class="wrapper">
+  <div class="container-fluid">
+    <div class="row mt-4">
+      <div class="col-1">
+        <?php include "../defaults/sideMenu.php"; ?>
+    </div>
+    <div class="col-11">
+      <?php
+      echo createForm($query,"post.php",$id);
+      ?>
+      <script type="text/javascript" src ="../js/post.js"></script>
+    </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+<?php
+
+function getColumnsfromResult($result){
+  $columns=[];
+  for ($i = 0; $i < $result->columnCount(); $i++) {
+    $col = $result->getColumnMeta($i);
+    $columns[] = (object) ["name"=>$col['name'],"type"=>$col['native_type'], "disabled"=>isPrimaryKey($col['flags']),"table"=>$col['table']];
+  }
+
+  return $columns;
+}
+function getDB(){
+  $user     = "root";
+  $password = "123456";
+  $dsn      = 'mysql:host=localhost;dbname=softwareCompany';
+  $db       = new PDO($dsn, $user, $password);
+  $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
+  $db->exec("SET CHARACTER SET utf8");
+
+  return $db;
+}
+function execSQL($query,$values,$return=false){
+  $db = getDB();
+  $st = $db->prepare($query);
+  if ($st->execute($values)){
+    if($return) return $st;
+    if(stripos($query, "INSERT INTO") !== false) return $db->lastInsertId();
+    return true;
+  }
+  return false;
+}
+function createTable($query){
+  $db = getDB();
+  $result = $db->query($query);
+  $columns = getColumnsfromResult($result);
+  $html= '<table class="table"><thead><tr>';
+  foreach ($columns as $col) $html.= "<th>$col->name</th>";
+  $html.= "<th>Actions</th></tr></thead><tbody>";
+  foreach ($result as $key){
+    $recordID=0;
+    $html.= "<tr>";
+    foreach ($key as $name => $val) {
+      if ($name === "id") $recordID=$val;
+      $html.= "<td> $val </td>";
+    }
+
+    $html.= '<td>';
+    if(stripos($query, "from project") !== false){
+      $html.= '<button type="button" class="btn btn-dark btn-sm btn-milestones mr-1" data-id="'.$recordID.'">Milestones</button>';
+        $html.= '<button type="button" class="btn btn-primary btn-sm btn-engineer mr-1" data-id="'.$recordID.'">+ Engineer</button>';
+        $html.= '<button type="button" class="btn btn-success btn-sm btn-listengineers mr-1" data-id="'.$recordID.'">List Engineers</button>';
+        $html.= '<button type="button" class="btn btn-default btn-sm btn-tool mr-1" data-id="'.$recordID.'">+ Tool</button>';
+        $html.= '<button type="button" class="btn btn-secondary btn-sm btn-listtools mr-1" data-id="'.$recordID.'">List Tools</button>';
+        $html.= '<button type="button" class="btn btn-warning btn-sm btn-stage mr-1" data-id="'.$recordID.'">Change Stage</button>';
+    }
+    if(stripos($query, "from tool") !== false){
+      $html.= '<button type="button" class="btn btn-primary btn-sm btn-tproject mr-1" data-id="'.$recordID.'">Assign Project</button>';
+      $html.= '<button type="button" class="btn btn-success btn-sm btn-listtprojects mr-1" data-id="'.$recordID.'">Assigned Projects</button>';
+
+    }
+    else if(stripos($query, "from engineer") !== false){
+      $html.= '<button type="button" class="btn btn-primary btn-sm btn-project mr-1" data-id="'.$recordID.'">Assign Project</button>';
+      $html.= '<button type="button" class="btn btn-success btn-sm btn-listprojects mr-1" data-id="'.$recordID.'">Assigned Projects</button>';
+    }
+    else if(stripos($query, "from milestone") !== false){
+      $html.= '<button type="button" class="btn btn-dark btn-sm btn-mile-done mr-1" data-id="'.$recordID.'">Toggle Milestone</button>';
+    }
+    $html.= '<button type="button" class="btn btn-info btn-sm btn-edit mr-1" data-id="'.$recordID.'">Edit</button><button type="button" class="btn btn-danger btn-sm btn-delete mr-1" data-id="'.$recordID.'">Delete</button></td></tr>';
+  }
+  $html.= '</tbody></table>';
+  return $html;
+}
+function isPrimaryKey($flags){
+  foreach ($flags as $tmp) if ($tmp === "primary_key") return true;
+  return false;
+}
+
+function createSelect($query,$objeto,$selected=0){
+  $html = '<select class="form-control" name="'.$objeto->name.'"><option value="0">Select '.$objeto->name.'</option>';
+  $db = getDB();
+  $result = $db->query($query);
+  foreach ($result as $value){
+
+    if ($value->id == $selected) $s = " selected";
+    else $s="";
+    $html.='<option value="'.$value->id.'"'.$s.'>'.$value->name.'</option>';
+  }
+  $html.='</select>';
+  return $html;
+}
+function inputFromType($objeto,$result){
+  $html = '<label for="'.$objeto->name.'">'.$objeto->name.'</label>';
+  $value = is_null($result)?"":$result[$objeto->name];
+  if ($objeto->type === "DATE")
+  $html .= '<input class="form-control" id="'.$objeto->name.'" name="'.$objeto->name.'" type="date" value="'.$value.'" required />';
+  else if ($objeto->table === "e" && $objeto->name === "specialization")
+    $html.= createSelect("SELECT * FROM softwareField",$objeto,$value);
+  else if ($objeto->table === "project" && $objeto->name === "stage")
+      $html.= createSelect("SELECT * FROM stages",$objeto,$value);
+  else if ($objeto->table === "milestone" && $objeto->name === "projectId")
+      $html.= createSelect("SELECT * FROM project",$objeto,$value);
+  else
+    $html .= '<input class="form-control" id="'.$objeto->name.'" name="'.$objeto->name.'" type="text" value="'.$value.'"/>';
+    return $objeto->disabled? str_replace("/>","readonly />",$html): $html;
+}
+function createForm($query,$page,$edit=false){
+  $db = getDB();
+
+  $result = $db->query($query);
+  $val = $edit?"edit":"new";
+  $columns = getColumnsfromResult($result);
+  if(!$edit) $result = null;
+  else $result = $result->fetch(PDO::FETCH_ASSOC);
+  $html= '<form class="" action="'.$page.'" method="post"><div class="row">';
+  foreach ($columns as $col) $html.= '<div class="form-group col-6">'.inputFromType($col,$result).'</div>';
+  $html.= '<div class="col-12 text-center"><button type="submit" class="btn btn-lg btn-primary submit">Save</button></div></div><input type="hidden" name="type" value="'.$val.'"></form>';
+  return $html;
+}
+<?php
+ include "functions.php";
+$type = isset($_REQUEST["type"])?$_REQUEST["type"]:"";
+
+if ($type == "getAvailableEngineers"){
+  $pid = isset($_REQUEST["project"])?$_REQUEST["project"]:0;
+  $group = isset($_REQUEST["group"])?$_REQUEST["group"]:0;
+  $available = isset($_REQUEST["available"])?$_REQUEST["available"]:0;
+  if ($available) $sql = "SELECT * from engineer where id not in (SELECT engineerId from works where projectId = :pid)";
+  else $sql = "SELECT * from engineer where id in (SELECT engineerId from works where projectId = :pid)";
+  if($group) $sql = "SELECT e.id,e.name,e.birthday,e.zeut,s.specialization from engineer e inner join softwareField s on e.specialization = s.id  where e.id in (SELECT engineerId from works where projectId = :pid) order by e.specialization;";
+  $val = [":pid" => $pid];
+  $result = execSQL($sql,$val,true);
+  $output = [];
+  foreach ($result as $t) $output[] = $t;
+}
+else if ($type == "getAvailableProjects"){
+  $eid = isset($_REQUEST["engineer"])?$_REQUEST["engineer"]:0;
+  $available = isset($_REQUEST["available"])?$_REQUEST["available"]:0;
+  if ($available) $sql = "SELECT * from project where id not in (SELECT projectId from works where engineerId = :eid)";
+  else $sql = "SELECT * from project where id in (SELECT projectId from works where engineerId = :eid)";
+
+  $val = [":eid" => $eid];
+  $result = execSQL($sql,$val,true);
+  $output = [];
+  if ($result)
+  foreach ($result as $t) $output[] = $t;
+}
+else if ($type == "getAvailableToolsProjects"){
+  $tid = isset($_REQUEST["tool"])?$_REQUEST["tool"]:0;
+  $available = isset($_REQUEST["available"])?$_REQUEST["available"]:0;
+  if ($available) $sql = "SELECT * from project where id not in (SELECT p.id from project p LEFT JOIN toolsProjects tp on p.id = tp.projectId and p.stage = tp.stageId where toolsId = :tid)";
+  else $sql = "SELECT p.id,p.name from project p INNER JOIN toolsProjects tp on p.id = tp.projectId and p.stage = tp.stageId where toolsId = :tid;";
+
+  $val = [":tid" => $tid];
+  $result = execSQL($sql,$val,true);
+  $output = [];
+  if ($result)
+  foreach ($result as $t) $output[] = $t;
+}
+else if ($type == "getAvailableTools"){
+  $pid = isset($_REQUEST["project"])?$_REQUEST["project"]:0;
+  $available = isset($_REQUEST["available"])?$_REQUEST["available"]:0;
+  if ($available) $sql = "SELECT * from tools where id not in (SELECT toolsId from toolsProjects where projectId = :pid and stageId = (SELECT stage from project where id =:pid))";
+  else $sql = "SELECT * from tools where id in (SELECT toolsId from toolsProjects where projectId = :pid and stageId = (SELECT stage from project where id =:pid))";
+  $val = [":pid" => $pid];
+  $result = execSQL($sql,$val,true);
+  $output = [];
+  if ($result)
+  foreach ($result as $t) $output[] = $t;
+}
+else if ($type == "assignEngineerProject"){
+  $pid = isset($_REQUEST["project"])?$_REQUEST["project"]:0;
+  $eid = isset($_REQUEST["engineer"])?$_REQUEST["engineer"]:0;
+  $remove = isset($_REQUEST["remove"])?$_REQUEST["remove"]:0;
+  if ($pid && $eid){
+    if ($remove) $sql = "DELETE FROM works where engineerId=:eid and projectId=:pid";
+    else $sql = "INSERT INTO works(engineerId,projectId) values (:eid,:pid)";
+    $val = [":pid" => $pid,":eid" => $eid];
+    if ($result = execSQL($sql,$val)) $output = ["status"=>200];
+    else  $output = ["status"=>300];
+  }
+}
+else if ($type == "assignToolProject"){
+  $pid = isset($_REQUEST["project"])?$_REQUEST["project"]:0;
+  $tid = isset($_REQUEST["tool"])?$_REQUEST["tool"]:0;
+  $remove = isset($_REQUEST["remove"])?$_REQUEST["remove"]:0;
+  if ($pid && $tid){
+    if ($remove) $sql = "DELETE FROM toolsProjects where toolsId=:tid and projectId=:pid and stageId = (SELECT stage from project where id=:pid)";
+    else $sql = "INSERT INTO toolsProjects(toolsId,projectId,stageId) SELECT :tid,id,stage from project where id=:pid";
+    $val = [":pid" => $pid,":tid" => $tid];
+    if ($result = execSQL($sql,$val)) $output = ["status"=>200];
+    else  $output = ["status"=>300];
+  }
+}
+else if ($type == "getStages"){
+  $pid = isset($_REQUEST["project"])?$_REQUEST["project"]:0;
+  $available = isset($_REQUEST["available"])?$_REQUEST["available"]:0;
+  if ($available) $sql = "SELECT * from stages where id not in (SELECT stage from project where id = :pid)";
+  else $sql = "SELECT * from stages where id in (SELECT stage from project where id = :pid)";;
+  $val = [":pid" => $pid];
+  $result = execSQL($sql,$val,true);
+  $output = [];
+  if ($result)
+  foreach ($result as $t) $output[] = $t;
+}
+else if ($type == "assignStageProject"){
+  $pid = isset($_REQUEST["project"])?$_REQUEST["project"]:0;
+  $sid = isset($_REQUEST["stage"])?$_REQUEST["stage"]:0;
+  if ($pid && $sid){
+    $sql = "UPDATE project set stage = :sid where id = :pid";
+    $val = [":pid" => $pid,":sid" => $sid];
+    if ($result = execSQL($sql,$val)) $output = ["status"=>200];
+    else  $output = ["status"=>300];
+  }
+}
+
+else if ($type == "toggleMilestone"){
+  $mid = isset($_REQUEST["mid"])?$_REQUEST["mid"]:0;
+  if ($mid){
+    $sql = "UPDATE milestone SET done = 1 - done where id = :mid";
+    $val = [":mid" => $mid];
+    if ($result = execSQL($sql,$val)) $output = ["status"=>200];
+    else  $output = ["status"=>300];
+  }
+}
+else if ($type == "budgetNextMonth"){
+    $sql = "select m.name as Milestone, p.name as Project,m.moneysum as Budget from milestone m INNER JOIN project p on m.projectId = p.id  where m.startdate <= date(NOW()) and m.enddate >= date(NOW()) order by Budget DESC";
+    $result = execSQL($sql,[],true);
+    $output = [];
+    if ($result)
+    foreach ($result as $t) $output[] = $t;
+}
+else if ($type == "busyEngineer"){
+    $sql = "select id,name,birthday,zeut from engineer where id in (select engineerId from works group by engineerId having count(*) >= (select count(*) from project where startdate<=NOW()));";
+    $result = execSQL($sql,[],true);
+    $output = [];
+    if ($result)
+    foreach ($result as $t) $output[] = $t;
+}
+else if ($type == "stageTools"){
+    $id = isset($_REQUEST["stage"])?$_REQUEST["stage"]:0;
+    if($id){
+    $sql = "select p.name as project,p.startdate,t.name as tool,s.name as stage from project p INNER JOIN toolsProjects tp on p.id = tp.projectId INNER JOIN stages s on tp.stageId = s.id INNER JOIN tools t on t.id = tp.toolsId where tp.stageId = :id;";
+    $val = [":id" => $id];
+
+    $result = execSQL($sql,$val,true);
+  }
+    $output = [];
+    if ($result)
+    foreach ($result as $t) $output[] = $t;
+}
+
+
+
+
+
+
+
+
+echo json_encode($output);
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database</title>
+<link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet" >
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.1.3/sweetalert2.min.css" />
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.1.3/sweetalert2.all.min.js"></script>
+<link href="/db/project/css/style.css" rel="stylesheet">
+</head>
+<body>
+<?php include "functions.php"; ?>
+<div class="wrapper">
+  <div class="container-fluid">
+    <div class="row mt-4">
+      <div class="col-1">
+        <?php include "../defaults/sideMenu.php"; ?>
+    </div>
+    <div class="col-11">
+      <?php echo createTable($query); ?>
+      </div>
+      <script type="text/javascript" src ="../js/list.js"></script>
+
+    </div>
+  </div>
+</div>
+<?php foreach ($menuItems as $mi) { ?>
+<div class="col-12 mb-4">
+  <a href="<?php echo $mi->href;?>" class="btn btn-sq-sm btn-<?php echo $mi->active?$mi->color." selected":$mi->color;?>"><i class="fa fa-<?php echo $mi->icon;?> fa-3x"></i><br/><?php echo $mi->name;?></a>
+</div>
+<?php } ?>
+<?php
+$id = isset($_REQUEST["id"])?$_REQUEST["id"]:0;
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>false],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>true]];
+  $query = "select e.id,name,birthday,zeut,specialization,phone,street,zip,city,country from engineer e INNER JOIN engineerPhones ep on e.id = ep.engineerId INNER JOIN engineerAddress ea on e.id = ea.engineerId";
+  if($id) $query.= " where e.id=$id";
+ include "../defaults/add.php";
+ include "../defaults/footer.php";
+?>
+<?php
+
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>true],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>false]];
+  $query = "select e.id,e.name,birthday,zeut,IFNULL(s.name, '-') as spec,phone,street,zip,city,country from engineer e INNER JOIN engineerPhones ep on e.id = ep.engineerId INNER JOIN engineerAddress ea on e.id = ea.engineerId LEFT JOIN softwareField s on e.specialization = s.id ORDER BY e.id ASC;";
+
+ include "../defaults/list.php";
+ include "../defaults/footer.php";
+?>
+<?php
+include "../defaults/functions.php";
+$type = $_POST['type'];
+$output = ["status"=>400];
+if ($type === "new" || $type === "edit"){
+  $id = $_POST['id'];
+  $name = $_POST['name'];
+  $spec = $_POST['specialization'];
+  $birthday = $_POST['birthday'];
+  $zeut = $_POST['zeut'];
+  $phone = $_POST['phone'];
+  $street = $_POST['street'];
+  $street = $_POST['street'];
+  $zip = $_POST['zip'];
+  $city = $_POST['city'];
+  $country = $_POST['country'];
+  if (strlen($name)>4 &&  strlen($birthday)>4  &&  strlen($zeut)>4  &&  strlen($phone)>4 &&  strlen($street)>4 &&  strlen($street)>4 &&  strlen($zip)>4 &&  strlen($city)>4 &&  strlen($country)>4) {
+    $output = ["status"=>300];
+if($type ==="new") {
+    $sql = 'INSERT INTO engineer( name,birthday,zeut,specialization ) VALUES(:name,:birthday,:zeut,:spec)';
+    $vals = [':name' => $name, ':birthday' => date('Y-m-d', strtotime(str_replace('-', '/', $birthday))) ,':zeut' => $zeut, ':spec' => $spec>0?$spec:null ];
+    $engineerid = execSQL($sql,$vals);
+    if($engineerid){
+      $sql = 'INSERT INTO engineerPhones(phone,engineerId ) VALUES(:phone,:engineerId)';
+      $vals = [':phone' => $phone, ':engineerId'=>$engineerid];
+      if (execSQL($sql,$vals)){
+        $sql = 'INSERT INTO engineerAddress(city,street,country,zip,engineerId ) VALUES(:city,:street,:country,:zip,:engineerId)';
+        $vals = [':city' => $city,':street'=>$street,":country"=>$country, ":zip"=>$zip, ':engineerId'=>$engineerid];
+        if (execSQL($sql,$vals)) $output = ["status"=>200];
+      }
+      if($output["status"]!=200){
+        $sql = 'DELETE FROM engineer where id = :id';
+        $vals = [':id' => $engineerid];
+        execSQL($sql,$vals);
+      }
+    }
+    }
+    else {
+      $sql = 'UPDATE engineer SET name=:name,birthday=:birthday,zeut=:zeut,specialization=:spec where id = :id';
+      $vals = [ ':name'     => $name,
+                ':birthday' => date('Y-m-d', strtotime(str_replace('-', '/', $birthday))),
+                ':zeut'     => $zeut,
+                ':spec'     => $spec>0?$spec:null,
+                ':id'       => $id
+              ];
+      if(execSQL($sql,$vals)){
+        $output = ["status"=>200];
+      }
+
+
+
+    }
+  }
+}
+else if ($type === "delete"){
+  $id = $_POST['id'];
+  if(is_numeric($id)){
+    $sql = 'DELETE FROM engineer where id = :id';
+    $vals = [':id' => $id];
+    if (execSQL($sql,$vals)) $output = ["status"=>200];
+    else $output = ["status"=>300];
+  }
+}
+echo json_encode($output);
+?>
+<?php
+$id = isset($_REQUEST["id"])?$_REQUEST["id"]:0;
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>false],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>true]];
+  $query = "select id,name,startdate,enddate,moneysum,description,projectId from milestone";
+  if($id) $query.= " where id=$id";
+ include "../defaults/add.php";
+ include "../defaults/footer.php";
+?>
+<?php
+$pid = isset($_REQUEST["pid"])?$_REQUEST["pid"]:0;
+
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>true],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>false]];
+  $query = "select m.id,m.name,m.startdate,m.enddate,m.moneysum,m.description,p.name as project,IF( m.done =0,'In Progress','Done') AS status from milestone m INNER JOIN project p on m.projectId = p.id ";
+  if($pid) $query.= " where projectId=$pid";
+  $query.= "  ORDER BY m.id ASC";
+
+include "../defaults/list.php";
+include "../defaults/footer.php";
+
+?>
+<?php
+include "../defaults/functions.php";
+$type = $_POST['type'];
+$output = ["status"=>400];
+if ($type === "new" || $type==="edit"){
+  $id = $_POST['id'];
+  $name = $_POST['name'];
+  $startdate = $_POST['startdate'];
+  $enddate = $_POST['enddate'];
+  $moneysum = $_POST['moneysum'];
+  $projectId = $_POST['projectId'];
+  $description = $_POST['description'];
+  if (strlen($name) >2 && strlen($moneysum)>3 && $projectId>0){
+    if ($type=="new"){
+      $sql = 'INSERT INTO milestone( name, startdate, enddate,moneysum,projectId,description) VALUES(:name,:sd,:ed,:ms,:pid,:ds)';
+    $vals = [':name' => $name, ':sd' => date('Y-m-d', strtotime(str_replace('-', '/', $startdate))),':ed' => date('Y-m-d', strtotime(str_replace('-', '/', $enddate))),':ms'=>$moneysum,':pid'=>$projectId,':ds'=>$description ];
+  }else {
+    $sql = 'UPDATE milestone SET name=:name, startdate=:sd, enddate=:ed,moneysum=:ms,projectId=:pid,description=:ds where id = :id';
+    $vals = [':name' => $name, ':sd' => date('Y-m-d', strtotime(str_replace('-', '/', $startdate))),':ed' => date('Y-m-d', strtotime(str_replace('-', '/', $enddate))),':ms'=>$moneysum,':pid'=>$projectId,':ds'=>$description, ':id'=> $id ];
+  }
+    if (execSQL($sql,$vals)) $output = ["status"=>200];
+    else $output = ["status"=>300];
+  }
+}
+else if ($type === "delete"){
+  $id = $_POST['id'];
+  if(is_numeric($id)){
+    $sql = 'DELETE FROM milestone where id = :id';
+    $vals = [':id' => $id];
+    if (execSQL($sql,$vals)) $output = ["status"=>200];
+    else $output = ["status"=>300];
+  }
+}
+echo json_encode($output);
+?>
+<?php
+$id = isset($_REQUEST["id"])?$_REQUEST["id"]:0;
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>false],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>true]];
+  $query = "select * from project";
+  if($id) $query.= " where id=$id";
+ include "../defaults/add.php";
+ include "../defaults/footer.php";
+?>
+<?php
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>true],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>false]];
+  $query = "select p.id,p.name,p.startdate,p.description,s.name as stage from project p  INNER JOIN stages s on p.stage = s.id  ORDER BY p.id ASC";
+include "../defaults/list.php";
+include "../defaults/footer.php";
+
+?>
+<?php
+include "../defaults/functions.php";
+$type = $_POST['type'];
+$output = ["status"=>400];
+if ($type === "new" || $type==="edit"){
+  $id = $_POST['id'];
+  $name = $_POST['name'];
+  $startdate = $_POST['startdate'];
+  $description = $_POST['description'];
+  if (strlen($name) >2 && strlen($description)>3 && strlen($startdate)>5){
+    if ($type=="new"){
+      $sql = 'INSERT INTO project( name, startdate,description ) VALUES(:name,:sd,:descr)';
+    $vals = [':name' => $name, ':sd' => date('Y-m-d', strtotime(str_replace('-', '/', $startdate))),':descr'=>$description ];
+  }else {
+    $sql = 'UPDATE project SET name=:name,startdate=:sd,description=:descr where id = :id';
+    $vals = [':name' => $name, ':sd' => date('Y-m-d', strtotime(str_replace('-', '/', $startdate))),':descr'=>$description , ':id'=> $id];
+  }
+    if (execSQL($sql,$vals)) $output = ["status"=>200];
+    else $output = ["status"=>300];
+  }
+}
+else if ($type === "delete"){
+  $id = $_POST['id'];
+  if(is_numeric($id)){
+    $sql = 'DELETE FROM project where id = :id';
+    $vals = [':id' => $id];
+    if (execSQL($sql,$vals)) $output = ["status"=>200];
+    else $output = ["status"=>300];
+  }
+}
+echo json_encode($output);
+?>
+<?php
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "Budget","href"=> "#",  "color"=>"success", "icon"=>"money","active"=>false],
+  (object) ["name"=> "Busiest","href"=> "#",  "color"=>"info", "icon"=>"briefcase","active"=>false],
+  (object) ["name"=> "Proj/Eng","href"=> "#",  "color"=>"dark", "icon"=>"user","active"=>false],
+  (object) ["name"=> "Tools/Stage","href"=> "#",  "color"=>"warning", "icon"=>"wrench","active"=>false]
+];
+  ?>
+  <div class="wrapper">
+    <div class="container-fluid">
+      <div class="row mt-4">
+        <div class="col-1">
+          <?php include "../defaults/sideMenu.php"; ?>
+      </div>
+      <div class="col-11 results">
+      </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript" src ="../js/reports.js"></script>
+
+<?php
+ include "../defaults/footer.php";
+?>
+<?php
+$id = isset($_REQUEST["id"])?$_REQUEST["id"]:0;
+
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>false],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>true]];
+  $query = "select * from softwareField";
+  if($id) $query.= " where id=$id";
+
+ include "../defaults/add.php";
+ include "../defaults/footer.php";
+?>
+<?php
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>true],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>false]];
+  $query = "select * from softwareField  ORDER BY id ASC";
+include "../defaults/list.php";
+include "../defaults/footer.php";
+
+?>
+<?php
+include "../defaults/functions.php";
+$type = $_POST['type'];
+$output = ["status"=>400];
+if ($type === "new" || $type === "edit"){
+  $id = $_POST['id'];
+  $name = $_POST['name'];
+  $spec = $_POST['specialization'];
+  if (strlen($name) >2 && strlen($spec)>3){
+    if($type === "new"){
+      $sql = 'INSERT INTO softwareField( name, specialization ) VALUES(:name,:spec)';
+      $vals = [':name' => $name, ':spec' => $spec];
+    }
+    else{
+       $sql = 'UPDATE softwareField set name=:name,specialization=:spec where id = :id';
+       $vals = [':name' => $name, ':spec' => $spec,":id"=>$id];
+    }
+  if (execSQL($sql,$vals)) $output = ["status"=>200];
+    else $output = ["status"=>300];
+  }
+}
+else if ($type === "delete"){
+  $id = $_POST['id'];
+  if(is_numeric($id)){
+    $sql = 'DELETE FROM softwareField where id = :id';
+    $vals = [':id' => $id];
+    if (execSQL($sql,$vals)) $output = ["status"=>200];
+    else $output = ["status"=>300];
+  }
+}
+echo json_encode($output);
+?>
+<?php
+$id = isset($_REQUEST["id"])?$_REQUEST["id"]:0;
+
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>false],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>true]];
+  $query = "select * from tools";
+  if($id) $query.= " where id=$id";
+
+ include "../defaults/add.php";
+ include "../defaults/footer.php";
+?>
+<?php
+include "../defaults/header.php";
+$menuItems = [
+  (object) ["name"=> "Back","href"=> "../index.php",  "color"=>"danger", "icon"=>"arrow-left","active"=>false],
+  (object) ["name"=> "List","href"=> "list.php",  "color"=>"primary", "icon"=>"list","active"=>true],
+  (object) ["name"=> "Add","href"=> "add.php",  "color"=>"info", "icon"=>"plus","active"=>false]];
+  $query = "select * from tools";
+include "../defaults/list.php";
+include "../defaults/footer.php";
+
+?>
+<?php
+include "../defaults/functions.php";
+$type = $_POST['type'];
+$output = ["status"=>400];
+if ($type === "new" || $type === "edit"){
+  $id = $_POST['id'];
+  $name = $_POST['name'];
+  if (strlen($name) >2){
+    if($type === "new"){
+      $sql = 'INSERT INTO tools( name ) VALUES(:name)';
+      $vals = [':name' => $name];
+    }
+    else{
+       $sql = 'UPDATE tools set name=:name where id = :id';
+       $vals = [':name' => $name,":id"=>$id];
+    }
+  if (execSQL($sql,$vals)) $output = ["status"=>200];
+    else $output = ["status"=>300];
+  }
+}
+else if ($type === "delete"){
+  $id = $_POST['id'];
+  if(is_numeric($id)){
+    $sql = 'DELETE FROM tools where id = :id';
+    $vals = [':id' => $id];
+    if (execSQL($sql,$vals)) $output = ["status"=>200];
+    else $output = ["status"=>300];
+  }
+}
+echo json_encode($output);
+?>

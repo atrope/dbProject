@@ -267,16 +267,7 @@ $(document).ready(function() {
                   parsing = $.parseJSON(data);
                   console.log(parsing);
                   if (parsing.length) {
-                      swal({title: 'Choose the new stage',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Stage',showCancelButton: true,inputValidator: function(value) {
-                        return new Promise(function(resolve, reject) {
-                          if (!isNaN(value)) resolve();
-                        })
-                      }
-                      }).then(function(result) {
-                        if(result.hasOwnProperty('value'))
-                          getJSON({"type": "assignStageProject","stage": result.value,"project": id});
-                          location.reload();
-                      });
+
                   } else swal('Error!', 'No stages available.', 'error');
               } catch (e) {
                   swal('Error!', 'Error Ocurred in the backend.', 'error');
@@ -285,7 +276,59 @@ $(document).ready(function() {
         });
 
 
+        $(".table").on("click", ".btn-grade", function(event) {
+          var id = $(this).data("id");
+          var pid = 0;
+          $.post("../defaults/getJSON.php", {"type":"getAvailableProjects","engineer":id,"available":0}, function(data) {
+              try {
+                  parsing = $.parseJSON(data);
+                  if (parsing.length) {
+                      swal({title: 'Choose the Project to Grade',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsing),inputPlaceholder: 'Select Project',showCancelButton: true,inputValidator: function(value) {
+                        return new Promise(function(resolve, reject) {
+                          if (!isNaN(value)) resolve();
+                        })
+                      }
+                      }).then(function(result) {
+                        if(result.hasOwnProperty('value')){
+                          pid = result.value;
+                        $.post("../defaults/getJSON.php", {"type": "getMissingGrades","project": result.value,"engineer": id}, function(data) {
+                            parsed = $.parseJSON(data);
+                            if (parsed.length){
+                              swal.setDefaults({
+  confirmButtonText: 'Next &rarr;',
+  showCancelButton: true,
+  progressSteps: ['1', '2']
+})
+var steps = [{
+title: 'Select Month to Rate',input: 'select',inputClass: "form-control",type: 'info',inputOptions: dictFromParse(parsed),inputPlaceholder: 'Select Month'  },
+{title: 'Which is the Rating?',text: 'From 0 to 10',
+  input: 'number',inputAttributes: {
+     min: 0,max: 10,
+     step: 1}
+ }
+]
 
+swal.queue(steps).then((result) => {
+  swal.resetDefaults()
+  if (result.value) {
+    if (result.value.length==2 && result.value[1]>=0 && result.value[1]<=10){
+        getJSON({"type":"assingGrade","project":pid,"engineer":id,"grade":result.value[1],"date":result.value[0]})
+    }
+  }
+})
+
+
+
+                            }
+                            else swal('Error!', 'No grades to give.', 'error');
+                        });}
+                      });
+                  } else swal('Error!', 'No Projects Assigned.', 'error');
+              } catch (e) {
+                  swal('Error!', 'Error Ocurred in the backend.', 'error');
+              }
+          });
+        });
 
 
   });
