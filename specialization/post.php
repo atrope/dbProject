@@ -1,4 +1,7 @@
 <?php
+/*************************************************************
+specialization/post.php
+**************************************************************/
 include "../defaults/functions.php";
 $type = $_POST['type'];
 $output = ["status"=>400];

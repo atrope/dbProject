@@ -18,7 +18,9 @@
 --
 -- Table structure for table `engineer`
 --
-
+DROP DATABASE IF EXISTS softwareCompany;
+CREATE DATABASE softwareCompany;
+USE softwareCompany;
 DROP TABLE IF EXISTS `engineer`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;

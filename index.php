@@ -1,3 +1,8 @@
+<?php
+/*************************************************************
+index.php
+**************************************************************/
+?>
 <?php include "defaults/header.php"; ?>
 <div class="wrapper">
   <div class="container-fluid">

@@ -1,4 +1,7 @@
 <?php
+/*************************************************************
+milestones/add.php
+**************************************************************/
 $id = isset($_REQUEST["id"])?$_REQUEST["id"]:0;
 include "../defaults/header.php";
 $menuItems = [
