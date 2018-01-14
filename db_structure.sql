@@ -331,8 +331,10 @@ CREATE TABLE `project` (
   `name` varchar(255) NOT NULL,
   `startdate` date NOT NULL,
   `description` varchar(255) NOT NULL,
-  `stage` tinyint(4) DEFAULT '1',
-  PRIMARY KEY (`id`)
+  `stage` int(11) unsigned DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `sidP` (`stage`),
+  CONSTRAINT `sidP` FOREIGN KEY (`stage`) REFERENCES `stages` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -342,7 +344,7 @@ CREATE TABLE `project` (
 
 LOCK TABLES `project` WRITE;
 /*!40000 ALTER TABLE `project` DISABLE KEYS */;
-INSERT INTO `project` VALUES (1,'Nicolas LLC','2017-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',6),(2,'Wisozk-Quigley','2018-01-05','Siderosis',5),(3,'Goyette Inc','2017-01-06','Corrosion of second degree of right ankle and foot, sequela',1),(4,'Mitchell, Schulist and Koch','2018-01-10','3-part fx surgical neck of l humerus, subs for fx w malunion',1),(5,'Price, Renner and Weissnat','2018-01-17','Toxic effect of venom of venomous lizard, self-harm, init',1),(6,'Schinner-Halvorson','2018-01-04','Displacement of carotid arterial graft (bypass), init encntr',1),(7,'Huels LLC','2018-01-25','Displ suprcndl fx w intrcndl extn low end r femr, 7thJ',1),(8,'Sawayn-Kuhic','2018-01-29','Displ seg fx shaft of r tibia, init for opn fx type 3A/B/C',1),(9,'Kessler, Erdman and Gorczany','2018-01-04','Toxic effect of cadmium and its compounds, undet, sequela',1);
+INSERT INTO `project` VALUES (1,'Nicolas LLC','2017-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',3),(2,'Wisozk-Quigley','2018-01-05','Siderosis',5),(3,'Goyette Inc','2017-01-06','Corrosion of second degree of right ankle and foot, sequela',1),(4,'Mitchell, Schulist and Koch','2018-01-10','3-part fx surgical neck of l humerus, subs for fx w malunion',1),(5,'Price, Renner and Weissnat','2018-01-17','Toxic effect of venom of venomous lizard, self-harm, init',1),(6,'Schinner-Halvorson','2018-01-04','Displacement of carotid arterial graft (bypass), init encntr',1),(7,'Huels LLC','2018-01-25','Displ suprcndl fx w intrcndl extn low end r femr, 7thJ',1),(8,'Sawayn-Kuhic','2018-01-29','Displ seg fx shaft of r tibia, init for opn fx type 3A/B/C',1),(9,'Kessler, Erdman and Gorczany','2018-01-04','Toxic effect of cadmium and its compounds, undet, sequela',1);
 /*!40000 ALTER TABLE `project` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -395,32 +397,6 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
--- Table structure for table `projectSoftware`
---
-
-DROP TABLE IF EXISTS `projectSoftware`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `projectSoftware` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
-  `projectId` int(11) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `pidS` (`projectId`),
-  CONSTRAINT `pidS` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `projectSoftware`
---
-
-LOCK TABLES `projectSoftware` WRITE;
-/*!40000 ALTER TABLE `projectSoftware` DISABLE KEYS */;
-/*!40000 ALTER TABLE `projectSoftware` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `project_audit`
 --
 
@@ -437,7 +413,7 @@ CREATE TABLE `project_audit` (
   `action` varchar(50) DEFAULT NULL,
   `changedate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -446,7 +422,7 @@ CREATE TABLE `project_audit` (
 
 LOCK TABLES `project_audit` WRITE;
 /*!40000 ALTER TABLE `project_audit` DISABLE KEYS */;
-INSERT INTO `project_audit` VALUES (1,1,'Nicolas LLC','2018-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',1,'update','2018-01-10 16:04:20'),(2,1,'Nicolas LLC','2018-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',6,'update','2018-01-10 16:28:12'),(3,3,'Goyette Inc','2018-01-06','Corrosion of second degree of right ankle and foot, sequela',1,'update','2018-01-10 16:49:46');
+INSERT INTO `project_audit` VALUES (1,1,'Nicolas LLC','2018-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',1,'update','2018-01-10 16:04:20'),(2,1,'Nicolas LLC','2018-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',6,'update','2018-01-10 16:28:12'),(3,3,'Goyette Inc','2018-01-06','Corrosion of second degree of right ankle and foot, sequela',1,'update','2018-01-10 16:49:46'),(4,1,'Nicolas LLC','2017-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',6,'update','2018-01-12 10:57:39'),(5,1,'Nicolas LLC','2017-01-04','Nondisp fx of medial cuneiform of unspecified foot, sequela',4,'update','2018-01-12 10:57:52');
 /*!40000 ALTER TABLE `project_audit` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -498,6 +474,24 @@ LOCK TABLES `stages` WRITE;
 INSERT INTO `stages` VALUES (1,'Config'),(2,'Task Management'),(3,'Planning'),(4,'Require Management'),(5,'Design Coding'),(6,'Unit Testing'),(7,'Software Testing');
 /*!40000 ALTER TABLE `stages` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = latin1 */ ;
+/*!50003 SET character_set_results = latin1 */ ;
+/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER stages_before_delete BEFORE DELETE ON stages FOR EACH ROW
+BEGIN
+UPDATE `project` SET `stage` = (SELECT min(id) from stages where id != OLD.id) WHERE `stage` = OLD.`id`;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `tools`
@@ -542,7 +536,7 @@ CREATE TABLE `toolsProjects` (
   CONSTRAINT `pidT` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE,
   CONSTRAINT `sidT` FOREIGN KEY (`stageId`) REFERENCES `stages` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tidT` FOREIGN KEY (`toolsId`) REFERENCES `tools` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=104 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=105 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -551,7 +545,7 @@ CREATE TABLE `toolsProjects` (
 
 LOCK TABLES `toolsProjects` WRITE;
 /*!40000 ALTER TABLE `toolsProjects` DISABLE KEYS */;
-INSERT INTO `toolsProjects` VALUES (37,1,1,3),(40,1,1,4),(88,1,1,7),(25,1,2,1),(63,1,6,6),(5,1,8,2),(82,1,9,3),(4,1,10,2),(42,1,16,3),(60,1,17,1),(67,1,18,2),(41,2,2,4),(81,2,4,4),(53,2,4,6),(90,2,5,5),(38,2,7,3),(29,2,7,4),(52,2,8,1),(17,2,10,2),(39,2,10,7),(97,2,11,7),(54,2,12,1),(6,2,12,5),(68,2,14,1),(98,2,14,6),(62,2,18,1),(18,2,19,6),(50,3,1,5),(15,3,2,7),(73,3,4,1),(19,3,4,6),(56,3,4,7),(45,3,5,2),(84,3,5,6),(34,3,10,2),(92,3,13,7),(14,3,14,2),(9,3,17,4),(24,4,1,6),(99,4,4,4),(2,4,7,2),(3,4,7,4),(7,4,9,4),(91,4,10,2),(48,4,16,5),(78,4,17,6),(102,5,1,1),(70,5,1,3),(86,5,5,2),(26,5,5,4),(85,5,5,7),(103,5,6,1),(33,5,8,2),(49,5,9,3),(21,5,12,5),(80,5,19,7),(31,6,2,5),(44,6,5,2),(47,6,5,5),(8,6,8,6),(59,6,9,6),(43,6,10,1),(32,6,12,3),(79,6,12,5),(30,6,13,3),(23,6,16,3),(65,6,16,7),(64,6,18,5),(101,7,1,1),(13,7,5,7),(77,7,12,2),(96,7,13,5),(10,7,14,1),(72,7,14,4),(27,7,18,2),(57,7,19,3),(36,8,1,3),(46,8,1,6),(94,8,3,4),(71,8,4,6),(12,8,5,2),(51,8,11,2),(100,8,14,3),(76,8,14,4),(16,8,16,6),(95,9,2,2),(55,9,8,6),(20,9,9,2),(58,9,11,3),(87,9,11,7),(69,9,13,3),(89,9,16,5),(74,9,17,4);
+INSERT INTO `toolsProjects` VALUES (37,1,1,3),(40,1,1,4),(88,1,1,7),(25,1,2,1),(104,1,2,4),(63,1,6,6),(5,1,8,2),(82,1,9,3),(4,1,10,2),(42,1,16,3),(60,1,17,1),(67,1,18,2),(41,2,2,4),(81,2,4,4),(53,2,4,6),(90,2,5,5),(38,2,7,3),(29,2,7,4),(52,2,8,1),(17,2,10,2),(39,2,10,7),(97,2,11,7),(54,2,12,1),(6,2,12,5),(68,2,14,1),(98,2,14,6),(62,2,18,1),(18,2,19,6),(50,3,1,5),(15,3,2,7),(73,3,4,1),(19,3,4,6),(56,3,4,7),(45,3,5,2),(84,3,5,6),(34,3,10,2),(92,3,13,7),(14,3,14,2),(9,3,17,4),(24,4,1,6),(99,4,4,4),(2,4,7,2),(3,4,7,4),(7,4,9,4),(91,4,10,2),(48,4,16,5),(78,4,17,6),(102,5,1,1),(70,5,1,3),(86,5,5,2),(26,5,5,4),(85,5,5,7),(103,5,6,1),(33,5,8,2),(49,5,9,3),(21,5,12,5),(80,5,19,7),(31,6,2,5),(44,6,5,2),(47,6,5,5),(8,6,8,6),(59,6,9,6),(43,6,10,1),(32,6,12,3),(79,6,12,5),(30,6,13,3),(23,6,16,3),(65,6,16,7),(64,6,18,5),(101,7,1,1),(13,7,5,7),(77,7,12,2),(96,7,13,5),(10,7,14,1),(72,7,14,4),(27,7,18,2),(57,7,19,3),(36,8,1,3),(46,8,1,6),(94,8,3,4),(71,8,4,6),(12,8,5,2),(51,8,11,2),(100,8,14,3),(76,8,14,4),(16,8,16,6),(95,9,2,2),(55,9,8,6),(20,9,9,2),(58,9,11,3),(87,9,11,7),(69,9,13,3),(89,9,16,5),(74,9,17,4);
 /*!40000 ALTER TABLE `toolsProjects` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -593,4 +587,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-10 17:33:12
+-- Dump completed on 2018-01-12 11:13:37

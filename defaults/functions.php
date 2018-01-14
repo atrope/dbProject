@@ -58,7 +58,8 @@ function createTable($query){
       $html.= '<button type="button" class="btn btn-success btn-sm btn-listtprojects mr-1" data-id="'.$recordID.'">Assigned Projects</button>';
 
     }
-    else if(stripos($query, "from engineer") !== false){
+    else if(stripos($query, "from engineer ") !== false){
+      $html.= '<button type="button" class="btn btn-secondary btn-sm btn-other mr-1" data-id="'.$recordID.'">Secondary Info</button>';
       $html.= '<button type="button" class="btn btn-dark btn-sm btn-grade mr-1" data-id="'.$recordID.'">Grade</button>';
       $html.= '<button type="button" class="btn btn-primary btn-sm btn-project mr-1" data-id="'.$recordID.'">+Project</button>';
       $html.= '<button type="button" class="btn btn-success btn-sm btn-listprojects mr-1" data-id="'.$recordID.'">Projects</button>';

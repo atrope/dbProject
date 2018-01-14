@@ -8,7 +8,6 @@
       <?php echo createTable($query); ?>
       </div>
       <script type="text/javascript" src ="../js/list.js"></script>
-
     </div>
   </div>
 </div>

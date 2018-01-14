@@ -10,7 +10,6 @@ if ($type === "new" || $type === "edit"){
   $zeut = $_POST['zeut'];
   $phone = $_POST['phone'];
   $street = $_POST['street'];
-  $street = $_POST['street'];
   $zip = $_POST['zip'];
   $city = $_POST['city'];
   $country = $_POST['country'];

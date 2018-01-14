@@ -16,11 +16,14 @@ $(document).ready(function() {
             buttonsStyling: true,
         }).then((result) => {
             if (result.value) {
+              var obj = {"type": "delete","id": id};
+              if(window.location.href.indexOf("secondary")) {
+                obj["typeobj"] = getParameterByName("type",location.href);
+                url = "posts.php";
+              }
+              else url = "post.php";
                 swal.showLoading();
-                $.post("post.php", {
-                    "type": "delete",
-                    "id": id
-                }, function(data) {
+                $.post(url, obj, function(data) {
                     parsing = $.parseJSON(data);
                     if (parsing.status == 200) {
                         parent.remove();
@@ -33,12 +36,43 @@ $(document).ready(function() {
     });
     $(".table").on("click", ".btn-edit", function(event) {
         var id = $(this).data("id");
-        window.location.href = window.location.href.split('?')[0].replace("list.php", "add.php?id=" + id);
+        if(window.location.href.indexOf("secondary"))
+        window.location.href = window.location.href.split('?')[0].replace("secondary.php", "adds.php?id=" + id+"&type="+ getParameterByName("type",location.href));
+        else window.location.href = window.location.href.split('?')[0].replace("list.php", "add.php?id=" + id);
     });
     $(".table").on("click", ".btn-milestones", function(event) {
         var id = $(this).data("id");
         window.location.href = window.location.href.split('?')[0].replace("projects/list.php", "milestones/list.php?pid=" + id);
     });
+
+
+    $(".table").on("click", ".btn-other", function(event) {
+        var id = $(this).data("id");
+                  swal({
+                        title: 'Choose the type of info',
+                        input: 'select',
+                        inputClass: "form-control",
+                        type: 'info',
+                        inputOptions:  {'0': 'Addresses','1': 'Phones'  },
+                        inputPlaceholder: 'Select Type',
+                        showCancelButton: true,
+                        inputValidator: function(value) {
+                            return new Promise(function(resolve, reject) {
+                                if (!isNaN(value)) resolve();
+                            })
+                        }
+                    }).then(function(result) {
+                        if (result.hasOwnProperty('value'))
+                            window.location.href = window.location.href.split('?')[0].replace("list.php", "secondary.php?eid=" + id+"&type="+result.value);
+
+                    });
+        });
+
+
+
+
+
+
     $(".table").on("click", ".btn-engineer", function(event) {
         var id = $(this).data("id");
         $.post("../defaults/getJSON.php", {
@@ -517,4 +551,13 @@ function dictFromParse(parsing) {
         dict[item.id] = item.name;
     });
     return dict;
+}
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
